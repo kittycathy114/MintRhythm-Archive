@@ -2,6 +2,10 @@ package options;
 
 import states.MainMenuState;
 import backend.StageData;
+import flixel.FlxG;
+import flixel.math.FlxMath;
+import flixel.tweens.FlxTween;
+import flixel.input.mouse.FlxMouse;
 
 class OptionsState extends MusicBeatState
 {
@@ -49,6 +53,13 @@ class OptionsState extends MusicBeatState
 
 	private var allowInput:Bool = true; // 新增：控制输入的标志
 	private var descriptionTween:FlxTween;
+
+	// 新增：拖动相关变量
+	private var startTouchY:Null<Float> = null;
+	private var scrollOffset:Float = 0;
+	private var maxScrollSpeed:Float = 4000; // 调整最大滚动速度
+	private var scrollDamping:Float = 0.75; // 调整阻尼系数
+	private var currentScrollSpeed:Float = 0;
 
 	function openSelectedSubstate(label:String) {
 		if (label != Language.get("adjust_delay_combo") && label != Language.get("extra_options")) {
@@ -162,6 +173,8 @@ class OptionsState extends MusicBeatState
 		addTouchPad('UP_DOWN', 'A_B_C');
 
 		super.create();
+		FlxG.mouse.visible = true;
+
 	}
 
 	override function closeSubState()
@@ -212,10 +225,33 @@ class OptionsState extends MusicBeatState
 			}
 		}
 
+		// 处理拖动
+		var mouse:FlxMouse = FlxG.mouse;
+		if (mouse.justPressed) {
+			startTouchY = mouse.y;
+		}
+
+		if (mouse.pressed && startTouchY != null) {
+			var deltaY = mouse.y - startTouchY;
+			scrollOffset += deltaY;
+			startTouchY = mouse.y;
+		} else {
+			startTouchY = null;
+		}
+
+		// 应用阻尼效果
+		currentScrollSpeed = FlxMath.lerp(currentScrollSpeed, 0, 1 - scrollDamping * elapsed * 5);
+		scrollOffset += currentScrollSpeed * elapsed;
+
+		// 限制滚动范围
+		var minScroll = -(itemSpacing * (options.length - 1));
+		var maxScroll = 0;
+		scrollOffset = FlxMath.bound(scrollOffset, minScroll, maxScroll);
+
 		// 平滑滚动动画，减轻滚动程度
 		for (i in 0...grpOptions.length)
 		{
-			var targetY = optionTargetYs[i];
+			var targetY = optionTargetYs[i] + scrollOffset;
 			optionCurYs[i] = FlxMath.lerp(targetY, optionCurYs[i], Math.exp(-elapsed * 6)); // 减轻滚动速度
 			grpOptions.members[i].y = optionCurYs[i];
 		}
@@ -256,7 +292,15 @@ class OptionsState extends MusicBeatState
 	function changeSelection(change:Int = 0)
 	{
 		curSelected = FlxMath.wrap(curSelected + change, 0, options.length - 1);
+		updateOptionPositions();
+		updateDescriptionText();
 
+		FlxG.sound.play(Paths.sound('scrollMenu'));
+	}
+
+	// 更新选项位置
+	private function updateOptionPositions():Void
+	{
 		// 计算视觉聚焦的目标位置
 		var focusY = FlxG.height / 3 + (FlxG.height / 3) * (curSelected / (options.length - 1));
 
@@ -273,8 +317,11 @@ class OptionsState extends MusicBeatState
 				item.alpha = 1;
 			}
 		}
-		
-		// 更新描述文本动效
+	}
+
+	// 更新描述文本
+	private function updateDescriptionText():Void
+	{
 		descriptionText.text = optionDescriptions[curSelected];
 		
 		// 取消之前的tween
@@ -296,8 +343,6 @@ class OptionsState extends MusicBeatState
 				}
 			}
 		);
-
-		FlxG.sound.play(Paths.sound('scrollMenu'));
 	}
 
 	public function refreshTexts()

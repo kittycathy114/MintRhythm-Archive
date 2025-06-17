@@ -313,5 +313,14 @@
     "fps_spacing_desc": "Adjust the spacing between FPS counter and screen edges",
     "camhud_zoom_desc": "Adjust the zoom level of HUD elements.",
     "legacy_notepos_desc": "Use the old note position system.",
-    "ratings_pos_desc": "Set the position of the ratings on screen."
+    "ratings_pos_desc": "Set the position of the ratings on screen.",
+    "firstlaunch_select": "Select Language",
+    "firstlaunch_flashing": "Disable Flashing Lights?",
+    "firstlaunch_warning": "This mod contains flashing effects that may cause discomfort",
+    "firstlaunch_next": "Next",
+    "firstlaunch_back": "Back",
+    "firstlaunch_yes": "Yes",
+    "firstlaunch_no": "No",
+    "bot_addscore_desc_en": "If enabled, when bot hit notes, the score will increase.\n(Doesn't count towards the final score.)"
+
 }

@@ -322,5 +322,16 @@
     "camhud_zoom_desc": "调整HUD界面元素的缩放大小",
     "legacy_notepos_desc": "使用旧的音符位置系统",
     "ratings_pos_desc": "设置评分在屏幕上的位置",
-    "events_debug_desc": "(实验性功能)\n牺牲部分性能来显示事件信息，只有在ChartingMode中有效！"
+    "events_debug_desc": "(实验性功能)\n牺牲部分性能来显示事件信息，只有在ChartingMode中有效！",
+
+    "firstlaunch_select": "选择语言",
+    "firstlaunch_flashing": "禁用闪光效果？",
+    "firstlaunch_warning": "本模组包含可能引起不适的闪光效果",
+    "firstlaunch_next": "下一步",
+    "firstlaunch_back": "上一步",
+    "firstlaunch_yes": "是",
+    "firstlaunch_no": "否",
+
+
+    "bot_addscore_desc": "若启用，当BOT命中箭头时也会加分\n（不算入最终成绩哦）"
 }

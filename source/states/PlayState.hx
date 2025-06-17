@@ -95,6 +95,7 @@ class PlayState extends MusicBeatState
 	var icondancingLeft:Bool = false;
 	var ratingexspr:String = '';
 	var exratingexspr:String = '-extra';
+	var numexspr:String = '';
 	var ratingAlpha:Float = ClientPrefs.data.ratingsAlpha;
 	var iconP1InitialY:Float;
 	var iconP2InitialY:Float;
@@ -1370,22 +1371,30 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 		if(!instakillOnMiss) {
 			if (ClientPrefs.data.scoretxtstyle == 'MintRhythm')
 			{
-				tempScore = 'NPS: ${nps} (${maxNPS}) | Score: ${songScore}'
-				+ (!instakillOnMiss ? ' | Miss: ${songMisses}' : "")
-				+ ' | Acc: ${percent}% | ${ratingFC}'
-				+ (cpuControlled ? ' | AUTOPLAY' : "");
+    			if (!cpuControlled || ClientPrefs.data.botplayScore)
+				{
+        			tempScore = 'NPS: ${nps} (${maxNPS}) | Score: ${songScore}'
+        			+ (!instakillOnMiss ? ' | Miss: ${songMisses}' : "")
+        			+ ' | Acc: ${percent}% | ${ratingFC}';
+    			} else {
+        			tempScore = 'NPS: ${nps} (${maxNPS})';
+    			}
+				if (cpuControlled) tempScore += ' | AUTOPLAY';
 			}
 			else if (ClientPrefs.data.scoretxtstyle == 'Kade')
 			{
-				//这里懒得改了
-				tempScore = 'NPS: ${nps} (Max: ${maxNPS}) | Score: ${songScore}'
-				+ (!instakillOnMiss ? ' | Combo Breaks: ${songMisses}' : "")
-				+ ' | Accuracy: ${percent}% | (${ratingFC}) ${ratingNameKE}'
-				+ (cpuControlled ? ' | BOTPLAY' : "");
+    			if (!cpuControlled || ClientPrefs.data.botplayScore)
+				{
+        			tempScore = 'NPS: ${nps} (Max: ${maxNPS}) | Score: ${songScore}'
+        			+ (!instakillOnMiss ? ' | Combo Breaks: ${songMisses}' : "")
+        			+ ' | Accuracy: ${percent}% | (${ratingFC}) ${ratingNameKE}';
+    			} else {
+        			tempScore = 'NPS: ${nps} (Max: ${maxNPS})';
+    			}
+				//if (cpuControlled) tempScore += ' | BOTPLAY';	//仿NF，所以我把这行注释掉了（）
 			}
 			else
 				tempScore = LanguageBasic.getPhrase('score_text', 'Score: {1} | Misses: {2} | Rating: {3}', [songScore, songMisses, str]);
-
 		}
 		else tempScore = LanguageBasic.getPhrase('score_text_instakill', 'Score: {1} | Rating: {2}', [songScore, str]);
 		scoreTxt.text = tempScore;
@@ -2086,9 +2095,9 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 			nps = notesHitArray.length;
 			if (nps > maxNPS)
 				maxNPS = nps;
-			if (npsCheck != nps) {
-			    npsCheck = nps;			    
-			    updateScoreText();				  
+			if (npsCheck != nps && ClientPrefs.data.scoretxtstyle == 'MintRhythm' || ClientPrefs.data.scoretxtstyle == 'Kade') {
+			    npsCheck = nps;
+			    updateScoreText();
 			}
 			setOnLuas('nps', nps);
 			setOnLuas('maxFPS', maxNPS);	
@@ -2199,19 +2208,27 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
             case "SB":      	20;
             case "VSlice(New)": 14;
             case "VSlice(Old)": 36;
-            default:       		9;
+            case "Dave": 		22;
+            case "NovaFlare": 	22;
+            default: 			9;
         }
 
-        // 根据风格选择插值方式
-        if (["Kade", "VSlice(New)", "VSlice(Old)", "Leather", "Codename"].contains(ClientPrefs.data.iconbopstyle)) {
-            // 线性缩放：使用 lerp 直接过渡到 1
+        if (["Kade", "VSlice(New)", "VSlice(Old)", "Leather", "Dave", "Codename"].contains(ClientPrefs.data.iconbopstyle)) {
             var rate:Float = elapsed * speedMultiplier * playbackRate;
             iconP1.scale.x = FlxMath.lerp(iconP1.scale.x, 1, rate);
             iconP1.scale.y = FlxMath.lerp(iconP1.scale.y, 1, rate);
             iconP2.scale.x = FlxMath.lerp(iconP2.scale.x, 1, rate);
             iconP2.scale.y = FlxMath.lerp(iconP2.scale.y, 1, rate);
-        } else {
-            // 指数衰减：其他风格保持原版逻辑
+        }/*这是NF原生的
+		else if (["NovaFlare"].contains(ClientPrefs.data.iconbopstyle)) 
+		{
+		var mult:Float = FlxMath.lerp(1, iconP1.scale.x, FlxMath.bound((1 - (elapsed * 9 * playbackRate)) / 1.1, 0, 1));
+		iconP1.scale.set(mult, mult);
+
+		var mult:Float = FlxMath.lerp(1, iconP2.scale.x, FlxMath.bound((1 - (elapsed * 9 * playbackRate)) / 1.1, 0, 1));
+		iconP2.scale.set(mult, mult);
+		}*/
+		else {
             var mult:Float = FlxMath.lerp(1, iconP1.scale.x, Math.exp(-elapsed * speedMultiplier * playbackRate));
             iconP1.scale.set(mult, mult);
             mult = FlxMath.lerp(1, iconP2.scale.x, Math.exp(-elapsed * speedMultiplier * playbackRate));
@@ -2971,6 +2988,7 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 	public var showCombo:Bool = false;
 	public var showComboNum:Bool = true;
 	public var showRating:Bool = true;
+	public var showEXRating:Bool = ClientPrefs.data.exratingDisplay;
 
 	// Stores Ratings and Combo Sprites in a group
 	public var comboGroup:FlxSpriteGroup;
@@ -2986,11 +3004,11 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 			uiFolder = uiPrefix + "UI/";
 
 		for (rating in ratingsData)
-			Paths.image(uiFolder + rating.image + ratingexspr + uiPostfix);
+			Paths.image(uiFolder + rating.image + uiPostfix + ratingexspr);
 		for (theEXrating in ratingsData)
-			Paths.image(uiFolder + theEXrating.image + exratingexspr + uiPostfix);
+			Paths.image(uiFolder + theEXrating.image + uiPostfix + exratingexspr);
 		for (i in 0...10)
-			Paths.image(uiFolder + 'num' + i + uiPostfix);
+			Paths.image(uiFolder + 'num' + i + uiPostfix + numexspr);
 	}
 
 	private function popUpScore(note:Note = null):Void
@@ -3011,8 +3029,8 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 		}
 
 		if (!ClientPrefs.data.rmmsTimeTxt) {
-			msTimeTxt.alpha = ClientPrefs.data.ratingsAlpha;
-			msTimeTxt.scale.set(1.35, 0.85);
+			msTimeTxt.alpha = ratingAlpha;
+			msTimeTxt.scale.set(1.33, 0.8);
 			// 调整显示格式，保留两位小数
 			if(cpuControlled) msTimeTxt.text = Std.string(CoolUtil.floorDecimal(noteDiff, 2)) + "ms(BOT)";
 			else msTimeTxt.text = Std.string(CoolUtil.floorDecimal(noteDiff, 2)) + "ms";
@@ -3020,14 +3038,14 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 			if (msTimeTxtTween1 != null){
 				msTimeTxtTween1.cancel(); msTimeTxtTween1.destroy(); // top 10 awesome code
 			}
-			msTimeTxtTween1 = FlxTween.tween(msTimeTxt, {alpha: 0}, 0.2, {
-				onComplete: function(tw:FlxTween) {msTimeTxtTween1 = null;}, startDelay: 0.3
+			msTimeTxtTween1 = FlxTween.tween(msTimeTxt, {alpha: 0}, (60 / Conductor.bpm) * 1.5, {
+				onComplete: function(tw:FlxTween) {msTimeTxtTween1 = null;}, startDelay: (60 / Conductor.bpm) * 0.7
 			});
 
 			if (msTimeTxtTween2 != null){
 				msTimeTxtTween2.cancel(); msTimeTxtTween2.destroy(); // top 10 awesome code
 			}
-			msTimeTxtTween2 = FlxTween.tween(msTimeTxt.scale, {x: 1, y: 1}, 0.4, {
+			msTimeTxtTween2 = FlxTween.tween(msTimeTxt.scale, {x: 1, y: 1}, (60 / Conductor.bpm), {
 				ease: FlxEase.circOut,
 			});
 		}
@@ -3049,15 +3067,18 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 		if(daRating.noteSplash && !note.noteSplashData.disabled && ClientPrefs.data.cpuStrums)
 			spawnNoteSplashOnNote(note);
 
-		/*if(!cpuControlled) */{
-			songScore += score;
-			if(!note.ratingDisabled)
-			{
-				songHits++;
-				totalPlayed++;
-				RecalculateRating(false);
-			}
+		/*if(!cpuControlled) */
+		if(!cpuControlled || ClientPrefs.data.botplayScore)
+		{
+    		songScore += score;
+    		if(!note.ratingDisabled) 
+    		{
+        		songHits++;
+        		totalPlayed++; 
+        		RecalculateRating(false);
+    		}
 		}
+
 		if(cpuControlled) cpuHits++;
 
 		var uiFolder:String = "";
@@ -3089,10 +3110,12 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 			theEXrating.acceleration.y = 550 * playbackRate * playbackRate;
 			theEXrating.velocity.y -= FlxG.random.int(140, 175) * playbackRate;
 			theEXrating.velocity.x -= FlxG.random.int(0, 10) * playbackRate;
-			theEXrating.visible = (!ClientPrefs.data.hideHud && showRating);
+			theEXrating.visible = (!ClientPrefs.data.hideHud && showEXRating);
 			theEXrating.x += ClientPrefs.data.comboOffset[4] - 220;
 			theEXrating.y += -ClientPrefs.data.comboOffset[5] + 150;
 			theEXrating.antialiasing = antialias;
+			theEXrating.angle = 0;
+
 	
 			var comboSpr:FlxSprite = new FlxSprite().loadGraphic(Paths.image(uiFolder + 'combo' + uiPostfix));
 			comboSpr.screenCenter();
@@ -3136,13 +3159,17 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 				FlxTween.tween(rating.scale, {x: 0.7, y: 0.7}, 0.3, {ease: FlxEase.circOut});
 			}
 			
-			if(ClientPrefs.data.exratbounce == true)
-			{
-				theEXrating.scale.set(0.85, 0.85);
-				theEXrating.angle = (Math.random() * 10 + 4) * (Math.random() > .3 ? 1 : -1);
-				FlxTween.tween(theEXrating, {angle: 0}, .6, {ease: FlxEase.quartOut});
-				FlxTween.tween(theEXrating.scale, {x: 0.7, y: 0.7}, 0.5, {ease: FlxEase.circOut});
-			}
+			if(ClientPrefs.data.exratbounce == true && ClientPrefs.data.exratingDisplay)
+            {
+                theEXrating.scale.set(0.85, 0.85);
+                var targetAngle:Float = (Math.random() * 10) * (Math.random() > .5 ? 1 : -1);
+                    FlxTween.tween(theEXrating, {angle: targetAngle}, 0.025, {ease: FlxEase.quartOut,
+                        onComplete: function(tween:FlxTween) {
+                            FlxTween.tween(theEXrating, {angle: 0}, 0.3, {ease: FlxEase.circOut});
+                        }
+                    });
+                    FlxTween.tween(theEXrating.scale, {x: 0.7, y: 0.7}, 0.4, {ease: FlxEase.circOut});
+            }
 	
 			comboSpr.updateHitbox();
 			rating.updateHitbox();
@@ -3731,7 +3758,7 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 		FlxG.stage.removeEventListener(KeyboardEvent.KEY_DOWN, onKeyPress);
 		FlxG.stage.removeEventListener(KeyboardEvent.KEY_UP, onKeyRelease);
 
-		FlxG.camera.setFilters([]);
+		FlxG.camera.filters = [];
 
 		#if FLX_PITCH FlxG.sound.music.pitch = 1; #end
 		FlxG.animationTimeScale = 1;
@@ -3773,24 +3800,29 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 			notes.sort(FlxSort.byY, ClientPrefs.data.downScroll ? FlxSort.ASCENDING : FlxSort.DESCENDING);
 
 		if (ClientPrefs.data.iconbopstyle != "NONE") 
-		{
-			if (ClientPrefs.data.iconbopstyle == "Kade") {
-				iconP1.scale.set(1.4, 1.4);
-				iconP2.scale.set(1.4, 1.4);
-				}
-				else if (ClientPrefs.data.iconbopstyle == "Leather" || ClientPrefs.data.iconbopstyle == "VSlice(New)" || ClientPrefs.data.iconbopstyle == "Codename" || ClientPrefs.data.iconbopstyle == "VSlice(Old)") {
-					iconP1.scale.set(1.25, 1.25);
-					iconP2.scale.set(1.25, 1.25);
-				}
-				else if (ClientPrefs.data.iconbopstyle == "Vanilla") {
-					iconP1.scale.set(1.1, 1.1);
-					iconP2.scale.set(1.1, 1.1);
-				}
-				else {
-				iconP1.scale.set(1.2, 1.2);
-				iconP2.scale.set(1.2, 1.2);
-			}
-		}
+    	{
+        	switch(ClientPrefs.data.iconbopstyle) {
+            	case "Kade":
+                	iconP1.scale.set(1.4, 1.4);
+                	iconP2.scale.set(1.4, 1.4);
+
+            	case "Leather" | "VSlice(New)" | "Codename" | "VSlice(Old)" | "NovaFlare":
+                	iconP1.scale.set(1.3, 1.3);
+                	iconP2.scale.set(1.3, 1.3);
+                
+            	case "Vanilla":
+                	iconP1.scale.set(1.1, 1.1);
+                	iconP2.scale.set(1.1, 1.1);
+                
+            	case "Dave": 
+                    var funny:Float = Math.max(Math.min(1.2, 1.9), 0.1);
+                    iconP1.setGraphicSize(Std.int(iconP1.width + (70 * (funny + 0.1))), Std.int(iconP1.height - (35 * funny))); // 调整宽度和高度
+                    iconP2.setGraphicSize(Std.int(iconP2.width + (70 * ((2 - funny) + 0.1))), Std.int(iconP2.height - (35 * ((2 - funny) + 0.1)))); // 调整宽度和高度
+            	default:
+                	iconP1.scale.set(1.2, 1.2);
+                	iconP2.scale.set(1.2, 1.2);
+        	}
+    	}
 		dancingLeft = !dancingLeft;
 	
 		if (ClientPrefs.data.iconbopstyle == "OS") {
@@ -3806,7 +3838,7 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 			} else { 
 				iconP1.angle = 15; iconP2.angle = -15;
 			}
-		}	
+		}
 		else if (ClientPrefs.data.iconbopstyle == "MintRhythm") {
     		var healthPercent:Float = healthBar.percent;
     		if (healthPercent < 20) 
@@ -3817,7 +3849,7 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
             		FlxTween.tween(iconP2, {angle: 0}, 0.3, {ease: FlxEase.circOut});
             		icondancingLeft = !icondancingLeft;
         		}
-    		} 
+    		}
     		else if (healthPercent > 80) 
     		{
         		if (curBeat % 2 == 0) 
@@ -3827,16 +3859,6 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
             		icondancingLeft = !icondancingLeft;
         		}
         	}
-			else
-			{
-				if (curBeat % 4 == 0) 
-				{
-					iconP1.angle = -25;
-					iconP2.angle = 25;
-					FlxTween.tween(iconP1, {angle: 0}, 0.3, {ease: FlxEase.circOut});
-					FlxTween.tween(iconP2, {angle: 0}, 0.3, {ease: FlxEase.circOut});	
-				}
-    		}
 		}
 		
 

@@ -209,5 +209,14 @@
     "perfectwindow_desc": "調整「Perfect!!」評價的時間容許範圍（毫秒）。",
     "camhud_zoom_desc": "調整HUD介面元素的縮放大小。",
     "legacy_notepos_desc": "使用舊的音符位置系統。",
-    "ratings_pos_desc": "設定評分在螢幕上的位置。"
+    "ratings_pos_desc": "設定評分在螢幕上的位置。",
+    "firstlaunch_select": "選擇語言",
+    "firstlaunch_flashing": "停用閃光效果？",
+    "firstlaunch_warning": "本模組包含可能引起不適的閃光效果",
+    "firstlaunch_next": "下一步",
+    "firstlaunch_back": "上一步",
+    "firstlaunch_yes": "是",
+    "firstlaunch_no": "否",
+    "bot_addscore_desc": "若啟用，當BOT命中箭頭時也會加分\n（不算最終成績哦）"
+
 }

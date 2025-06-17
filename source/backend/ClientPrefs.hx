@@ -133,6 +133,7 @@ import states.TitleState;
 	public var hudSize:Float = 1.0;
 	public var enableModsImport:Bool = false; // Enable Mods Import in the main menu
 	public var eventDebug:Bool = true;
+	public var botplayScore:Bool = true;
 }
 
 class ClientPrefs {

@@ -102,6 +102,12 @@ class ExtraGameplaySettingSubState extends BaseOptionsMenu
 			BOOL);
 		addOption(option);
 
+		option = new Option('SongScore Added When BotPlay',
+			Language.get("bot_addscore_desc"),
+			'botplayScore',
+			BOOL);
+		addOption(option);
+
 		option = new Option('Show Event Information',
 			Language.get("events_debug_desc"),
 			'eventDebug',
@@ -132,7 +138,7 @@ class ExtraGameplaySettingSubState extends BaseOptionsMenu
 			Language.get("iconbop_style_desc"),
 			'iconbopstyle',
 			STRING,
-			['Psych', 'OS', 'MintRhythm', 'Kade', 'Leather', 'SB', 'Vanilla', 'VSlice(New)', 'VSlice(Old)', 'Codename', 'NONE']);
+			['Psych', 'OS', 'MintRhythm', 'Kade', 'Leather', 'SB', 'Vanilla', 'VSlice(New)', 'VSlice(Old)', 'Codename', 'Dave', 'NovaFlare', 'NONE']);
 		addOption(option);
 
 		option = new Option('ScoreTxt Style',
