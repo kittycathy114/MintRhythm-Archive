@@ -5,11 +5,12 @@ import flixel.ui.FlxButton;
 import flixel.text.FlxText;
 import flixel.util.FlxColor;
 import flixel.FlxSprite;
-import flixel.group.FlxGroup;
+import flixel.group.FlxSpriteGroup;
 import flixel.effects.FlxFlicker;
 import backend.Language;
 import backend.ClientPrefs;
-import backend.ui.PsychUIButton;
+import flixel.tweens.FlxTween;
+import flixel.tweens.FlxEase;
 
 class FirstLaunchState extends MusicBeatState
 {
@@ -17,13 +18,13 @@ class FirstLaunchState extends MusicBeatState
 
     var currentPage:Int = 0;
     var maxPages:Int = 2;
-    var languageButtons:FlxTypedGroup<PsychUIButton>;
-    var flashingButtons:FlxTypedGroup<PsychUIButton>;
+    var languageButtons:FlxTypedGroup<FlxButton>;
+    var flashingButtons:FlxTypedGroup<FlxButton>;
     var texts:FlxTypedSpriteGroup<FlxText>;
     var bg:FlxSprite;
     var titleText:FlxText;
-    var nextButton:PsychUIButton;
-    var backButton:PsychUIButton;
+    var nextButton:FlxButton;
+    var backButton:FlxButton;
 
     // 可用语言列表
     var availableLanguages:Array<String> = ["en_us", "zh_cn", "zh_tw"];
@@ -34,113 +35,169 @@ class FirstLaunchState extends MusicBeatState
     ];
     var selectedLanguage:String = "en_us";
 
+    var pageGroups:Array<FlxSpriteGroup>; // 存储每个页面的精灵组
+
     override function create()
     {
         super.create();
         FlxG.mouse.visible = true;
+        
+        pageGroups = [];
+        
         bg = new FlxSprite().makeGraphic(FlxG.width, FlxG.height, FlxColor.BLACK);
         add(bg);
 
-        texts = new FlxTypedSpriteGroup<FlxText>();
-        add(texts);
-
-        // 创建标题
+        // 创建标题文本
         titleText = new FlxText(0, 50, FlxG.width, "", 32);
         titleText.setFormat(Language.get('game_font'), 32, FlxColor.WHITE, CENTER);
-        texts.add(titleText);
+        add(titleText);
 
-        // 创建语言选择按钮组
-        languageButtons = new FlxTypedGroup<PsychUIButton>();
-        add(languageButtons);
+        // 为每个页面创建一个精灵组
+        for (i in 0...maxPages) {
+            var group = new FlxSpriteGroup();
+            group.x = i * FlxG.width;
+            pageGroups.push(group);
+            add(group);
+        }
 
-        // 创建闪光设置按钮组
-        flashingButtons = new FlxTypedGroup<PsychUIButton>();
-        add(flashingButtons);
-
+        // 创建各个按钮组
+        languageButtons = new FlxTypedGroup<FlxButton>();
+        flashingButtons = new FlxTypedGroup<FlxButton>();
+        
         // 创建导航按钮
-        nextButton = new PsychUIButton(FlxG.width - 150, FlxG.height - 50, "Next", goToNextPage);
-		nextButton.resize(120, 40);
+        createNavigationButtons();
+
+        // 初始化所有页面内容
+        initializeAllPages();
+        
+        ClientPrefs.data.language = selectedLanguage;
+        Language.load();
+        
+        updateText();
+    }
+
+    // 新增：获取按钮缩放比例
+    private function getButtonScale():Float {
+        #if mobile
+        return 2.0;
+        #else
+        return 1.0;
+        #end
+    }
+
+    // 修改：统一设置按钮大小
+    private function setButtonDefaults(button:FlxButton, width:Int, height:Int) {
+        var scale = getButtonScale();
+        button.setGraphicSize(Std.int(width * scale), Std.int(height * scale));
+        button.updateHitbox();
+        formatButtonText(button);
+    }
+
+    function createNavigationButtons() 
+    {
+        var buttonWidth = 120;
+        var buttonHeight = 40;
+        var scale = getButtonScale();
+        
+        nextButton = new FlxButton(FlxG.width - (buttonWidth * scale) - 30, FlxG.height - (buttonHeight * scale) - 10, "", goToNextPage);
+        setButtonDefaults(nextButton, buttonWidth, buttonHeight);
+        nextButton.label.text = Language.get("firstlaunch_next");
         add(nextButton);
 
-        backButton = new PsychUIButton(30, FlxG.height - 50, "Back", goToPreviousPage);
-		backButton.resize(120, 40);
+        backButton = new FlxButton(30, FlxG.height - (buttonHeight * scale) - 10, "", goToPreviousPage);
+        setButtonDefaults(backButton, buttonWidth, buttonHeight);
+        backButton.label.text = Language.get("firstlaunch_back");
         add(backButton);
-
-        // 初始化页面
-        updatePage();
     }
 
-    function updatePage()
+    function initializeAllPages() 
     {
-        // 清除现有内容
-        languageButtons.clear();
-        flashingButtons.clear();
-        texts.clear();
-        texts.add(titleText);
+        // 初始化语言选择页面
+        var buttonWidth = 300;
+        var buttonHeight = 40;
+        var scale = getButtonScale();
+        var yPos = 150;
 
-        switch (currentPage) {
-            case 0: // 语言选择页面
-                titleText.text = Language.get("firstlaunch_select");
-                
-                var yPos = 150;
-                for (lang in availableLanguages) {
-                    var button = new PsychUIButton(0, yPos, languageNames[lang], function() {
-                        selectedLanguage = lang;
-                        updateLanguageButtons();
-                        goToNextPage(); // 选择语言后自动滑动到下一页
-                    });
-					button.resize(300, 40);
-                    button.x = (FlxG.width - button.width) / 2;
-                    languageButtons.add(button);
-                    yPos += 60;
-                }
+        for (lang in availableLanguages) {
+            var button = new FlxButton(0, yPos, languageNames[lang], function() {
+                selectedLanguage = lang;
                 updateLanguageButtons();
-
-            case 1: // 闪光设置页面
-                titleText.text = Language.get("flashing_warning_text");
-                
-                var yesButton = new PsychUIButton(FlxG.width * 0.3 - 75, FlxG.height / 2, Language.get("firstlaunch_yes"), function() {
-                    ClientPrefs.data.flashing = true;
-                    saveAndExit();
-                });
-				yesButton.resize(120, 40);
-                
-                var noButton = new PsychUIButton(FlxG.width * 0.7 - 75, FlxG.height / 2, Language.get("firstlaunch_no"), function() {
-                    ClientPrefs.data.flashing = false;
-                    saveAndExit();
-                });
-				noButton.resize(120, 40);
-                
-                flashingButtons.add(yesButton);
-                flashingButtons.add(noButton);
-                
-                var infoText = new FlxText(0, FlxG.height / 2 + 60, FlxG.width, 
-                    Language.get("firstlaunch_warning"));
-                infoText.setFormat(Paths.font("vcr.ttf"), 20, FlxColor.WHITE, CENTER);
-                texts.add(infoText);
+                goToNextPage();
+            });
+            setButtonDefaults(button, buttonWidth, buttonHeight);
+            button.x = (FlxG.width - button.width) / 2;
+            languageButtons.add(button);
+            pageGroups[0].add(button);
+            yPos = Std.int(yPos + (60 * scale)); // 修复整数类型问题
         }
+        updateLanguageButtons();
+
+        // 初始化闪光设置页面
+        var yesButton = new FlxButton(
+            Std.int(FlxG.width * 0.3 - (75 * scale)), // 修复整数类型问题
+            FlxG.height / 2, 
+            Language.get("firstlaunch_yes"), 
+            function() {
+                ClientPrefs.data.flashing = true;
+                saveAndExit();
+            }
+        );
+        setButtonDefaults(yesButton, buttonWidth, buttonHeight);
         
-        // 更新导航按钮可见性
-        backButton.visible = (currentPage > 0);
-        nextButton.visible = (currentPage < maxPages - 1);
+        var noButton = new FlxButton(
+            Std.int(FlxG.width * 0.7 - (75 * scale)), // 修复整数类型问题
+            FlxG.height / 2, 
+            Language.get("firstlaunch_no"), 
+            function() {
+                ClientPrefs.data.flashing = false;
+                saveAndExit();
+            }
+        );
+        setButtonDefaults(noButton, buttonWidth, buttonHeight);
+        
+        flashingButtons.add(yesButton);
+        flashingButtons.add(noButton);
+        pageGroups[1].add(yesButton);
+        pageGroups[1].add(noButton);
     }
 
-    function updateLanguageButtons()
-    {
-        for (button in languageButtons) {
-            button.text.font = Paths.font("ResourceHanRoundedCN-Bold.ttf");
-            button.text.size = Std.parseInt(Language.get('button_text_size')) * 2;
-            button.color = (button.label == languageNames[selectedLanguage]) ? 
-                0xFF87CEEB : // 选中颜色
-                0xFFFFFFFF;  // 默认颜色
-        }
+    // 修改：统一设置按钮文本格式
+    function formatButtonText(button:FlxButton) {
+        var scale = getButtonScale();
+        var fontSize = Std.parseInt(Language.get('button_text_size')) * 2 * scale;
+        
+        button.label.setFormat(
+            Paths.font(Language.get('game_font')),
+            Std.int(fontSize),
+            FlxColor.BLACK,
+            CENTER
+        );
+        button.label.fieldWidth = button.width;
+        button.label.alignment = CENTER;
+        centerButtonText(button);
+    }
+
+    // 新增：居中按钮文本
+    function centerButtonText(button:FlxButton) {
+        button.label.fieldWidth = button.width;
+        button.label.x = 0;
+        button.label.y = (button.height - button.label.height) / 2;
     }
 
     function goToNextPage()
     {
         if (currentPage < maxPages - 1) {
             currentPage++;
-            updatePage();
+            for (i in 0...pageGroups.length) {
+                var group = pageGroups[i];
+                FlxTween.tween(group, {
+                    x: (i - currentPage) * FlxG.width
+                }, 0.7, {
+                    ease: FlxEase.expoOut
+                });
+            }
+            updateText();
+            updateNavigationButtons();
         }
     }
 
@@ -148,7 +205,41 @@ class FirstLaunchState extends MusicBeatState
     {
         if (currentPage > 0) {
             currentPage--;
-            updatePage();
+            for (i in 0...pageGroups.length) {
+                var group = pageGroups[i];
+                FlxTween.tween(group, {
+                    x: (i - currentPage) * FlxG.width
+                }, 0.7, {
+                    ease: FlxEase.expoOut
+                });
+            }
+            updateText();
+            updateNavigationButtons();
+        }
+    }
+
+    function updateNavigationButtons() {
+        backButton.visible = (currentPage > 0);
+        nextButton.visible = (currentPage < maxPages - 1);
+    }
+
+    function updateLanguageButtons()
+    {
+        for (button in languageButtons) {
+            button.label.setFormat(Paths.font("unifont-16.0.02.otf"), 
+                26,
+                0xFF404040  // 设置深灰色
+            );
+                
+            // 修改高亮显示
+            if (button.text == languageNames[selectedLanguage]) {
+                button.color = 0xFF87CEEB;
+                ClientPrefs.data.language = selectedLanguage;
+                Language.load();
+                updateText();
+            } else {
+                button.color = 0xFFFFFFFF;
+            }
         }
     }
 
@@ -185,29 +276,29 @@ class FirstLaunchState extends MusicBeatState
 
     function updateText() {
         titleText.text = switch (currentPage) {
-            case 0:
-                Language.get("firstlaunch_select");
-            case 1:
-                Language.get("firstlaunch_flashing");
-            default:
-                "";
+            case 0: Language.get("firstlaunch_select");
+            case 1: Language.get("flashing_warning_text");
+            default: "";
         };
 
-        nextButton.label = Language.get("firstlaunch_next");
-        backButton.label = Language.get("firstlaunch_back");
+        titleText.font = Paths.font(Language.get('game_font'));
+        
+        // 更新导航按钮文本
+        nextButton.label.text = Language.get("firstlaunch_next");
+        backButton.label.text = Language.get("firstlaunch_back");
+        centerButtonText(nextButton);
+        centerButtonText(backButton);
 
-        for (button in languageButtons) {
-            for (lang in availableLanguages) {
-                if (languageNames[lang] == button.label) {
-                    button.label = languageNames[lang];
-                    break;
-                }
-            }
-        }
-
+        // 更新闪光设置按钮
         if (currentPage == 1) {
-            for (button in flashingButtons) {
-                button.label = if (button.label == Language.get("firstlaunch_yes")) Language.get("firstlaunch_yes") else Language.get("firstlaunch_no");
+            var buttons = flashingButtons.members;
+            if(buttons.length >= 2) {
+                buttons[0].label.text = Language.get("firstlaunch_yes");
+                buttons[1].label.text = Language.get("firstlaunch_no");
+                
+                for(button in buttons) {
+                    formatButtonText(button);
+                }
             }
         }
     }

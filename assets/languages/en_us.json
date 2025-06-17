@@ -285,7 +285,7 @@
     "badwindow_desc": "Changes the amount of time you have\nfor hitting a \"Bad\" in milliseconds.",
     "safeframes_name": "Safe Frames",
     "safeframes_desc": "Changes how many frames you have for\nhitting a note earlier or late.",
-    "flashing_warning_text": "Hey, watch out!\nThis Mod contains some flashing lights!\nDo you wish to disable them?",
+    "flashing_warning_text": "Hey, watch out!\nThis Engine contains some flashing lights!\nDo you wish to enable them?",
     "flashing_yes": "Yes",
     "flashing_no": "No",
     "error_title": "Error",

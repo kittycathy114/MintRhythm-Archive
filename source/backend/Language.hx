@@ -5,8 +5,20 @@ import openfl.utils.Assets;
 import haxe.Json;
 
 class Language {
-    static var currentLang:Map<String, String> = new Map();
-    static var fallbackLang:String = ClientPrefs.data.language; // 默认回退语言
+    private static var currentLang:Map<String, String> = new Map();
+    private static var fallbackLang:String = ClientPrefs.data.language;
+    
+    // 添加语言变更回调
+    private static var onLanguageChangedCallbacks:Array<Void->Void> = [];
+    
+    public static function addCallback(callback:Void->Void) {
+        if (!onLanguageChangedCallbacks.contains(callback))
+            onLanguageChangedCallbacks.push(callback);
+    }
+    
+    public static function removeCallback(callback:Void->Void) {
+        onLanguageChangedCallbacks.remove(callback);
+    }
 
     public static function load() {
         var lang = ClientPrefs.data.language;
@@ -16,9 +28,14 @@ class Language {
         if(!loadLanguage(lang) && lang != fallbackLang) {
             loadLanguage(fallbackLang);
         }
+        
+        // 通知所有监听者语言已更改
+        for (callback in onLanguageChangedCallbacks) {
+            callback();
+        }
     }
     
-    static function loadLanguage(lang:String):Bool {
+    private static function loadLanguage(lang:String):Bool {
         try {
             var rawJson = Assets.getText('assets/languages/$lang.json');
             if(rawJson == null) return false;
@@ -38,7 +55,7 @@ class Language {
         var value = currentLang.exists(key) ? currentLang.get(key) : key; // 如果键不存在，返回键本身
         if (params != null) {
             for (i in 0...params.length) {
-                value = StringTools.replace(value, '$${i+1}', params[i]);
+                value = StringTools.replace(value, '{$i}', params[i]);
             }
         }
         return value;
