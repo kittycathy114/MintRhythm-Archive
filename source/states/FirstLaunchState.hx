@@ -11,6 +11,8 @@ import backend.Language;
 import backend.ClientPrefs;
 import flixel.tweens.FlxTween;
 import flixel.tweens.FlxEase;
+import flixel.FlxG;
+import flixel.util.FlxTimer;
 
 class FirstLaunchState extends MusicBeatState
 {
@@ -20,12 +22,13 @@ class FirstLaunchState extends MusicBeatState
     var maxPages:Int = 2;
     var languageButtons:FlxTypedGroup<FlxButton>;
     var flashingButtons:FlxTypedGroup<FlxButton>;
-    var texts:FlxTypedSpriteGroup<FlxText>;
     var bg:FlxSprite;
     var titleText:FlxText;
-    var nextButton:FlxButton;
-    var backButton:FlxButton;
-
+    
+    // 反馈文本
+    var feedbackText:FlxText;
+    var feedbackTween:FlxTween;
+    
     // 可用语言列表
     var availableLanguages:Array<String> = ["en_us", "zh_cn", "zh_tw"];
     var languageNames:Map<String, String> = [
@@ -36,6 +39,7 @@ class FirstLaunchState extends MusicBeatState
     var selectedLanguage:String = "en_us";
 
     var pageGroups:Array<FlxSpriteGroup>; // 存储每个页面的精灵组
+    var inTransition:Bool = false; // 防止在动画期间进行交互
 
     override function create()
     {
@@ -52,6 +56,13 @@ class FirstLaunchState extends MusicBeatState
         titleText.setFormat(Language.get('game_font'), 32, FlxColor.WHITE, CENTER);
         add(titleText);
 
+        // 创建反馈文本（初始隐藏）
+        feedbackText = new FlxText(0, 0, FlxG.width, "", 24);
+        feedbackText.setFormat(Language.get('game_font'), 24, FlxColor.WHITE, CENTER);
+        feedbackText.alpha = 0;
+        feedbackText.visible = false;
+        add(feedbackText);
+
         // 为每个页面创建一个精灵组
         for (i in 0...maxPages) {
             var group = new FlxSpriteGroup();
@@ -64,19 +75,17 @@ class FirstLaunchState extends MusicBeatState
         languageButtons = new FlxTypedGroup<FlxButton>();
         flashingButtons = new FlxTypedGroup<FlxButton>();
         
-        // 创建导航按钮
-        createNavigationButtons();
-
         // 初始化所有页面内容
         initializeAllPages();
         
+        // 设置默认语言
         ClientPrefs.data.language = selectedLanguage;
         Language.load();
         
         updateText();
     }
 
-    // 新增：获取按钮缩放比例
+    // 获取按钮缩放比例
     private function getButtonScale():Float {
         #if mobile
         return 2.0;
@@ -85,29 +94,12 @@ class FirstLaunchState extends MusicBeatState
         #end
     }
 
-    // 修改：统一设置按钮大小
+    // 统一设置按钮大小
     private function setButtonDefaults(button:FlxButton, width:Int, height:Int) {
         var scale = getButtonScale();
         button.setGraphicSize(Std.int(width * scale), Std.int(height * scale));
         button.updateHitbox();
         formatButtonText(button);
-    }
-
-    function createNavigationButtons() 
-    {
-        var buttonWidth = 120;
-        var buttonHeight = 40;
-        var scale = getButtonScale();
-        
-        nextButton = new FlxButton(FlxG.width - (buttonWidth * scale) - 30, FlxG.height - (buttonHeight * scale) - 10, "", goToNextPage);
-        setButtonDefaults(nextButton, buttonWidth, buttonHeight);
-        nextButton.label.text = Language.get("firstlaunch_next");
-        add(nextButton);
-
-        backButton = new FlxButton(30, FlxG.height - (buttonHeight * scale) - 10, "", goToPreviousPage);
-        setButtonDefaults(backButton, buttonWidth, buttonHeight);
-        backButton.label.text = Language.get("firstlaunch_back");
-        add(backButton);
     }
 
     function initializeAllPages() 
@@ -120,24 +112,35 @@ class FirstLaunchState extends MusicBeatState
 
         for (lang in availableLanguages) {
             var button = new FlxButton(0, yPos, languageNames[lang], function() {
+                if (inTransition) return;
+                
                 selectedLanguage = lang;
                 updateLanguageButtons();
-                goToNextPage();
+                
+                // 显示语言设置成功的反馈
+                showLanguageFeedback();
             });
             setButtonDefaults(button, buttonWidth, buttonHeight);
             button.x = (FlxG.width - button.width) / 2;
             languageButtons.add(button);
             pageGroups[0].add(button);
-            yPos = Std.int(yPos + (60 * scale)); // 修复整数类型问题
+            yPos = Std.int(yPos + (60 * scale));
         }
         updateLanguageButtons();
 
         // 初始化闪光设置页面
+        var buttonWidth = 300;
+        var buttonHeight = 40;
+        var scale = getButtonScale();
+        var yPos = FlxG.height / 2;
+        
         var yesButton = new FlxButton(
-            Std.int(FlxG.width * 0.3 - (75 * scale)), // 修复整数类型问题
-            FlxG.height / 2, 
-            Language.get("firstlaunch_yes"), 
+            (FlxG.width - buttonWidth * scale) / 2,
+            yPos - (60 * scale),
+            Language.get("firstlaunch_yes"),
             function() {
+                if (inTransition) return;
+                
                 ClientPrefs.data.flashing = true;
                 saveAndExit();
             }
@@ -145,10 +148,12 @@ class FirstLaunchState extends MusicBeatState
         setButtonDefaults(yesButton, buttonWidth, buttonHeight);
         
         var noButton = new FlxButton(
-            Std.int(FlxG.width * 0.7 - (75 * scale)), // 修复整数类型问题
-            FlxG.height / 2, 
-            Language.get("firstlaunch_no"), 
+            (FlxG.width - buttonWidth * scale) / 2,
+            yPos + (60 * scale),
+            Language.get("firstlaunch_no"),
             function() {
+                if (inTransition) return;
+                
                 ClientPrefs.data.flashing = false;
                 saveAndExit();
             }
@@ -161,10 +166,54 @@ class FirstLaunchState extends MusicBeatState
         pageGroups[1].add(noButton);
     }
 
-    // 修改：统一设置按钮文本格式
+    // 显示语言设置成功的反馈动画
+    function showLanguageFeedback()
+    {
+        inTransition = true;
+        
+        // 禁用所有按钮
+        for (button in languageButtons) {
+            button.active = false;
+        }
+        
+        // 设置反馈文本
+        feedbackText.text = Language.get("firstlaunch_language_set") + " " + languageNames[selectedLanguage];
+        feedbackText.font = Paths.font(Language.get('game_font'));
+        feedbackText.size = 28;
+        feedbackText.updateHitbox();
+        
+        // 初始位置和状态
+        feedbackText.x = 0;
+        feedbackText.y = FlxG.height / 2 - feedbackText.height / 2;
+        feedbackText.alpha = 0;
+        feedbackText.visible = true;
+        
+        // 渐显动画
+        FlxTween.tween(feedbackText, {alpha: 1}, 0.5, {
+            ease: FlxEase.quadOut,
+            onComplete: function(twn:FlxTween) {
+                // 停留1秒
+                new FlxTimer().start(1, function(tmr:FlxTimer) {
+                    // 上移并渐隐
+                    feedbackTween = FlxTween.tween(feedbackText, {
+                        y: feedbackText.y - 100,
+                        alpha: 0
+                    }, 0.8, {
+                        ease: FlxEase.quadOut,
+                        onComplete: function(twn:FlxTween) {
+                            feedbackText.visible = false;
+                            goToNextPage();
+                        }
+                    });
+                });
+            }
+        });
+    }
+
+    // 统一设置按钮文本格式
     function formatButtonText(button:FlxButton) {
         var scale = getButtonScale();
-        var fontSize = Std.parseInt(Language.get('button_text_size')) * 2 * scale;
+        var fontSize = 24 * scale;
         
         button.label.setFormat(
             Paths.font(Language.get('game_font')),
@@ -177,7 +226,7 @@ class FirstLaunchState extends MusicBeatState
         centerButtonText(button);
     }
 
-    // 新增：居中按钮文本
+    // 居中按钮文本
     function centerButtonText(button:FlxButton) {
         button.label.fieldWidth = button.width;
         button.label.x = 0;
@@ -188,56 +237,38 @@ class FirstLaunchState extends MusicBeatState
     {
         if (currentPage < maxPages - 1) {
             currentPage++;
+            
+            // 页面切换动画
             for (i in 0...pageGroups.length) {
                 var group = pageGroups[i];
                 FlxTween.tween(group, {
                     x: (i - currentPage) * FlxG.width
-                }, 0.7, {
-                    ease: FlxEase.expoOut
+                }, 1.0, {
+                    ease: FlxEase.quadOut,
+                    onComplete: function(twn:FlxTween) {
+                        inTransition = false;
+                    }
                 });
             }
+            
             updateText();
-            updateNavigationButtons();
         }
-    }
-
-    function goToPreviousPage()
-    {
-        if (currentPage > 0) {
-            currentPage--;
-            for (i in 0...pageGroups.length) {
-                var group = pageGroups[i];
-                FlxTween.tween(group, {
-                    x: (i - currentPage) * FlxG.width
-                }, 0.7, {
-                    ease: FlxEase.expoOut
-                });
-            }
-            updateText();
-            updateNavigationButtons();
-        }
-    }
-
-    function updateNavigationButtons() {
-        backButton.visible = (currentPage > 0);
-        nextButton.visible = (currentPage < maxPages - 1);
     }
 
     function updateLanguageButtons()
     {
         for (button in languageButtons) {
-            button.label.setFormat(Paths.font("unifont-16.0.02.otf"), 
-                26,
-                0xFF404040  // 设置深灰色
-            );
-                
-            // 修改高亮显示
+            // 重置所有按钮颜色
+            button.color = 0xFFFFFFFF;
+            
+            // 高亮显示选中按钮
             if (button.text == languageNames[selectedLanguage]) {
-                button.color = 0xFF87CEEB;
-                ClientPrefs.data.language = selectedLanguage;
-                Language.load();
-                updateText();
+                // 使用更明显的选中效果
+                FlxFlicker.flicker(button, 0, 0.1, true, true);
+                button.label.color = FlxColor.WHITE;
+                button.color = 0xFF2E86C1; // 蓝色
             } else {
+                button.label.color = FlxColor.BLACK;
                 button.color = 0xFFFFFFFF;
             }
         }
@@ -258,20 +289,14 @@ class FirstLaunchState extends MusicBeatState
         // 加载语言
         Language.load();
         
-        // 更新文本
-        updateText();
-        
-        // 切换到标题界面
-        MusicBeatState.switchState(new TitleState());
-    }
-
-    override function update(elapsed:Float)
-    {
-        super.update(elapsed);
-        
-        // 支持键盘导航
-        if (FlxG.keys.justPressed.RIGHT) goToNextPage();
-        if (FlxG.keys.justPressed.LEFT) goToPreviousPage();
+        // 添加退出动画
+        FlxTween.tween(bg, {alpha: 0}, 0.8, {
+            ease: FlxEase.quadOut,
+            onComplete: function(twn:FlxTween) {
+                // 切换到标题界面
+                MusicBeatState.switchState(new TitleState());
+            }
+        });
     }
 
     function updateText() {
@@ -282,12 +307,8 @@ class FirstLaunchState extends MusicBeatState
         };
 
         titleText.font = Paths.font(Language.get('game_font'));
-        
-        // 更新导航按钮文本
-        nextButton.label.text = Language.get("firstlaunch_next");
-        backButton.label.text = Language.get("firstlaunch_back");
-        centerButtonText(nextButton);
-        centerButtonText(backButton);
+        titleText.updateHitbox();
+        titleText.screenCenter(X);
 
         // 更新闪光设置按钮
         if (currentPage == 1) {

@@ -29,6 +29,7 @@ import states.editors.CharacterEditorState;
 
 import substates.PauseSubState;
 import substates.GameOverSubstate;
+import substates.ResultsScreen;
 
 #if !flash
 import openfl.filters.ShaderFilter;
@@ -607,7 +608,7 @@ class PlayState extends MusicBeatState
 		if(ClientPrefs.data.downScroll) timeTxt.y = FlxG.height - 44;
 		if(ClientPrefs.data.timeBarType == 'Song Name') timeTxt.text = SONG.song;
 
-		timeBar = new Bar(0, timeTxt.y + (timeTxt.height / 4), 'timeBar', function() return songPercent, 0, 1);
+		timeBar = new Bar(0, timeTxt.y + (timeTxt.height / 4), ClientPrefs.data.timebarStyle == "Kade (Legacy)" ? "timeBarKEL" : "timeBar" , function() return songPercent, 0, 1);
 		timeBar.scrollFactor.set();
 		timeBar.screenCenter(X);
 		timeBar.alpha = 0;
@@ -684,6 +685,14 @@ class PlayState extends MusicBeatState
 		scoreTxt.screenCenter(X);
 		scoreTxt.scrollFactor.set();
 		scoreTxt.setFormat(Paths.font("vcr.ttf"), 16, FlxColor.WHITE, FlxTextAlign.CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		}
+		else if (ClientPrefs.data.scoretxtstyle == 'V-Slice')	
+		{
+			scoreTxt = new FlxText(FlxG.width / 2 - 235, healthBar.y + 50, 0, "", 20);
+			scoreTxt.screenCenter(X);
+			scoreTxt.x += 100;
+			scoreTxt.scrollFactor.set();
+			scoreTxt.setFormat(Paths.font("vcr.ttf"), 16, FlxColor.WHITE, FlxTextAlign.CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		}
 		else 
 		{
@@ -1319,7 +1328,7 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 				daNote.visible = false;
 				daNote.ignoreNote = true;
 
-				//if(!ClientPrefs.data.lowQuality || !cpuControlled) daNote.kill();
+				if(!ClientPrefs.data.lowQuality/* || !cpuControlled*/) daNote.kill();
 				unspawnNotes.remove(daNote);
 				daNote.destroy();
 			}
@@ -1360,45 +1369,61 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 	public dynamic function updateScoreText()
 	{
 		var str:String = LanguageBasic.getPhrase('rating_$ratingName', ratingName);
-		var percent:Float = 0; // 提前声明并初始化
-		if(totalPlayed != 0)
-		{
-			percent = CoolUtil.floorDecimal(ratingPercent * 100, 2);
-			str += ' (${percent}%) - ' + LanguageBasic.getPhrase(ratingFC);
-		}
+        var percent:Float = 0; // 提前声明并初始化
+        if(totalPlayed != 0)
+        {
+            percent = CoolUtil.floorDecimal(ratingPercent * 100, 2);
+            str += ' (${percent}%) - ' + LanguageBasic.getPhrase(ratingFC);
+        }
 
-		var tempScore:String;
-		if(!instakillOnMiss) {
-			if (ClientPrefs.data.scoretxtstyle == 'MintRhythm')
+        var tempScore:String;
+        if(!instakillOnMiss) {
+            if (ClientPrefs.data.scoretxtstyle == 'MintRhythm')
 			{
     			if (!cpuControlled || ClientPrefs.data.botplayScore)
-				{
-        			tempScore = 'NPS: ${nps} (${maxNPS}) | Score: ${songScore}'
-        			+ (!instakillOnMiss ? ' | Miss: ${songMisses}' : "")
-        			+ ' | Acc: ${percent}% | ${ratingFC}';
-    			} else {
-        			tempScore = 'NPS: ${nps} (${maxNPS})';
+    			{
+        			tempScore = '| ';
+        			if (ClientPrefs.data.showNPS)
+            			tempScore += 'NPS: ${nps} (${maxNPS}) | ';
+        			tempScore += 'Score: ${songScore}';
+        			if (!instakillOnMiss)
+            			tempScore += ' | Miss: ${songMisses}';
+        			tempScore += ' | Acc: ${percent}% | ${ratingFC} |';
     			}
-				if (cpuControlled) tempScore += ' | AUTOPLAY';
-			}
-			else if (ClientPrefs.data.scoretxtstyle == 'Kade')
-			{
-    			if (!cpuControlled || ClientPrefs.data.botplayScore)
-				{
-        			tempScore = 'NPS: ${nps} (Max: ${maxNPS}) | Score: ${songScore}'
-        			+ (!instakillOnMiss ? ' | Combo Breaks: ${songMisses}' : "")
-        			+ ' | Accuracy: ${percent}% | (${ratingFC}) ${ratingNameKE}';
-    			} else {
-        			tempScore = 'NPS: ${nps} (Max: ${maxNPS})';
+    			else {
+        			if (ClientPrefs.data.showNPS)
+            			tempScore = '| NPS: ${nps} (${maxNPS}) |';
+        			else
+            			tempScore = ''; // 不显示竖线
     			}
-				//if (cpuControlled) tempScore += ' | BOTPLAY';	//仿NF，所以我把这行注释掉了（）
+    			//if (cpuControlled) tempScore += ' AUTOPLAY |';
 			}
-			else
-				tempScore = LanguageBasic.getPhrase('score_text', 'Score: {1} | Misses: {2} | Rating: {3}', [songScore, songMisses, str]);
-		}
-		else tempScore = LanguageBasic.getPhrase('score_text_instakill', 'Score: {1} | Rating: {2}', [songScore, str]);
-		scoreTxt.text = tempScore;
-	}
+            else if (ClientPrefs.data.scoretxtstyle == 'Kade')
+            {
+                if (!cpuControlled || ClientPrefs.data.botplayScore)
+                {
+                    tempScore = '';
+                    if (ClientPrefs.data.showNPS)
+                        tempScore += 'NPS: ${nps} (Max: ${maxNPS}) | ';
+                    tempScore += 'Score: ${songScore}';
+                    if (!instakillOnMiss)
+                        tempScore += ' | Combo Breaks: ${songMisses}';
+                    tempScore += ' | Accuracy: ${percent}% | (${ratingFC}) ${ratingNameKE}';
+                } else {
+                    tempScore = ClientPrefs.data.showNPS ? 'NPS: ${nps} (Max: ${maxNPS})' : '';
+                }
+                //if (cpuControlled) tempScore += ' | BOTPLAY';
+            }
+			else if (ClientPrefs.data.scoretxtstyle == 'V-Slice')
+            {
+                    tempScore = 'Score: ${songScore}';
+            }
+            else
+                tempScore = LanguageBasic.getPhrase('score_text', 'Score: {1} | Misses: {2} | Rating: {3}', [songScore, songMisses, str]);
+        }
+        else tempScore = LanguageBasic.getPhrase('score_text_instakill', 'Score: {1} | Rating: {2}', [songScore, str]);
+        scoreTxt.text = tempScore;
+    }
 
 	public dynamic function fullComboFunction()
 	{
@@ -1406,7 +1431,7 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 		var goods:Int = ratingsData[1].hits;
 		var bads:Int = ratingsData[2].hits;
 		var shits:Int = ratingsData[3].hits;
-        var perfects:Int = !ClientPrefs.data.rmperfect ? ratingsData[4].hits : 0;    
+        var perfects:Int = !ClientPrefs.data.rmPerfect ? ratingsData[4].hits : 0;    
 
 		//ratingFC = "";
 		ratingFC = /*ClientPrefs.data.scoretxtstyle == 'Psych' ? "?" : */"?";
@@ -1968,10 +1993,10 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 		setOnScripts('curDecStep', curDecStep);
 		setOnScripts('curDecBeat', curDecBeat);
 
-		if(botplayTxt != null && botplayTxt.visible) {
+		if(botplayTxt != null && botplayTxt.visible && ClientPrefs.data.botplayStyle != 'Kade') {
 			botplaySine += 180 * elapsed;
 			botplayTxt.alpha = 1 - Math.sin((Math.PI * botplaySine) / 180);
-		}
+		} else botplayTxt.alpha = 1;
 
 		if (controls.PAUSE #if android || FlxG.android.justReleased.BACK #end && startedCountdown && canPause)
 		{
@@ -2042,11 +2067,26 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 				timeTxt.text = FlxStringUtil.formatTime(secondsTotal, false);
 		}
 
+		//if (camZooming)
+		//{
+			//FlxG.camera.zoom = FlxMath.lerp(defaultCamZoom, FlxG.camera.zoom, Math.exp(-elapsed * 3.125 * camZoomingDecay * playbackRate));
+    		/*if(ClientPrefs.data.hudSize != 1.0) 	targetZoom = ClientPrefs.data.hudSize;*/
+    		//camHUD.zoom = FlxMath.lerp(targetZoom, camHUD.zoom, Math.exp(-elapsed * 3.125 * camZoomingDecay * playbackRate));
+		//}
 		if (camZooming)
 		{
-			FlxG.camera.zoom = FlxMath.lerp(defaultCamZoom, FlxG.camera.zoom, Math.exp(-elapsed * 3.125 * camZoomingDecay * playbackRate));
-    		/*if(ClientPrefs.data.hudSize != 1.0) 	targetZoom = ClientPrefs.data.hudSize;*/
-    		camHUD.zoom = FlxMath.lerp(targetZoom, camHUD.zoom, Math.exp(-elapsed * 3.125 * camZoomingDecay * playbackRate));
+    		// 先定义一个映射表，或者用简单的switch/if
+    		var styleNum:Float = switch (ClientPrefs.data.hudZoomStyle)
+    		{
+        		case "Kade": 12;
+        		case "Fast": 20;
+        		case "Slow": 1.5;
+        		default: 3.125; // 默认
+    		}
+    		var zoomLerp = Math.exp(-elapsed * styleNum * camZoomingDecay * playbackRate);
+    		var hudLerp = zoomLerp;
+    		FlxG.camera.zoom = FlxMath.lerp(defaultCamZoom, FlxG.camera.zoom, zoomLerp);
+    		camHUD.zoom = FlxMath.lerp(targetZoom, camHUD.zoom, hudLerp);
 		}
 
 		FlxG.watch.addQuick("secShit", curSection);
@@ -2095,8 +2135,8 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 			nps = notesHitArray.length;
 			if (nps > maxNPS)
 				maxNPS = nps;
-			if (npsCheck != nps && ClientPrefs.data.scoretxtstyle == 'MintRhythm' || ClientPrefs.data.scoretxtstyle == 'Kade') {
-			    npsCheck = nps;
+			if (ClientPrefs.data.showNPS && npsCheck != nps && ClientPrefs.data.scoretxtstyle == 'MintRhythm' || ClientPrefs.data.scoretxtstyle == 'Kade') {
+				npsCheck = nps;
 			    updateScoreText();
 			}
 			setOnLuas('nps', nps);
@@ -2202,7 +2242,6 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
     } else {
         // 旧版本多风格整合逻辑
         var speedMultiplier:Float = switch (ClientPrefs.data.iconbopstyle) {
-            case "Kade":  		22;
             case "Codename":	20;
             case "Leather": 	7;
             case "SB":      	20;
@@ -2213,7 +2252,7 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
             default: 			9;
         }
 
-        if (["Kade", "VSlice(New)", "VSlice(Old)", "Leather", "Dave", "Codename"].contains(ClientPrefs.data.iconbopstyle)) {
+        if (["VSlice(New)", "VSlice(Old)", "Leather", "Dave", "Codename"].contains(ClientPrefs.data.iconbopstyle)) {
             var rate:Float = elapsed * speedMultiplier * playbackRate;
             iconP1.scale.x = FlxMath.lerp(iconP1.scale.x, 1, rate);
             iconP1.scale.y = FlxMath.lerp(iconP1.scale.y, 1, rate);
@@ -2246,7 +2285,8 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 		var iconOffset:Int = 26;
 
 		// MintRhythm专属动效
-		if(ClientPrefs.data.iconbopstyle == "MintRhythm") {
+		//不要了，不好看
+		/*if(ClientPrefs.data.iconbopstyle == "MintRhythm") {
 			iconP1.x = healthBar.barCenter + (150 * iconP1.scale.x - 150)/2 - iconOffset;
 			iconP2.x = healthBar.barCenter - (150 * iconP2.scale.x)/2 - iconOffset*2;
 
@@ -2254,7 +2294,8 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 			var wave = Math.sin(Conductor.songPosition / 400) * 1.5;
 			iconP1.y = iconP1InitialY + wave;
 			iconP2.y = iconP2InitialY - wave;
-		} else {
+		} else */
+		{
 
 			iconP1.x = healthBar.barCenter + (150 * iconP1.scale.x - 150)/2 - iconOffset;
 			iconP2.x = healthBar.barCenter - (150 * iconP2.scale.x)/2 - iconOffset*2;
@@ -2957,14 +2998,15 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 			}
 			else
 			{
-				trace('WENT BACK TO FREEPLAY??');
+				openSubState(new ResultsScreen());
+				/*trace('WENT BACK TO FREEPLAY??');
 				Mods.loadTopMod();
 				#if DISCORD_ALLOWED DiscordClient.resetClientID(); #end
 
 				canResync = false;
 				MusicBeatState.switchState(new FreeplayState());
 				FlxG.sound.playMusic(Paths.music('freakyMenu'));
-				changedDifficulty = false;
+				changedDifficulty = false;*/
 			}
 			transitioning = true;
 		}
@@ -2985,7 +3027,7 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 	public var totalPlayed:Int = 0;
 	public var totalNotesHit:Float = 0.0;
 
-	public var showCombo:Bool = false;
+	public var showCombo:Bool = ClientPrefs.data.comboSprDisplay;
 	public var showComboNum:Bool = true;
 	public var showRating:Bool = true;
 	public var showEXRating:Bool = ClientPrefs.data.exratingDisplay;
@@ -3015,6 +3057,9 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 	{
 		// 移除Math.abs()来允许显示负值
 		var noteDiff:Float = note.strumTime - Conductor.songPosition + ClientPrefs.data.ratingOffset;
+		allNotesMs += noteDiff;
+		averageMs = allNotesMs/songHits;
+
 		vocals.volume = 1;
 
 		if (!ClientPrefs.data.comboStacking && comboGroup.members.length > 0)
@@ -3122,24 +3167,24 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 			comboSpr.x = placement;
 			comboSpr.acceleration.y = FlxG.random.int(200, 300) * playbackRate * playbackRate;
 			comboSpr.velocity.y -= FlxG.random.int(140, 160) * playbackRate;
+			comboSpr.velocity.x += FlxG.random.int(1, 10) * playbackRate;
 			comboSpr.visible = (!ClientPrefs.data.hideHud && showCombo);
 			comboSpr.x += ClientPrefs.data.comboOffset[0] + 60;
 			comboSpr.y -= ClientPrefs.data.comboOffset[1];
 			comboSpr.antialiasing = antialias;
 			comboSpr.y += 160;
-			comboSpr.velocity.x += FlxG.random.int(1, 10) * playbackRate;
 
 			if (!PlayState.isPixelStage)
 			{
 				rating.setGraphicSize(Std.int(rating.width * 0.7));
 				theEXrating.setGraphicSize(Std.int(theEXrating.width * 0.7));
-				comboSpr.setGraphicSize(Std.int(comboSpr.width * 0.7));
+				comboSpr.setGraphicSize(Std.int(comboSpr.width * 0.65));
 			}
 			else
 			{
-				rating.setGraphicSize(Std.int(rating.width * 0.7));
-				theEXrating.setGraphicSize(Std.int(theEXrating.width * daPixelZoom * 0.85));
-				comboSpr.setGraphicSize(Std.int(comboSpr.width * daPixelZoom * 0.85));
+				rating.setGraphicSize(Std.int(rating.width * daPixelZoom * 0.7));
+				theEXrating.setGraphicSize(Std.int(theEXrating.width * daPixelZoom * 0.7));
+				comboSpr.setGraphicSize(Std.int(comboSpr.width * daPixelZoom * 0.7));
 			}
 
 
@@ -3155,13 +3200,13 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 
 			if (ClientPrefs.data.ratbounce == true && !PlayState.isPixelStage) 
 			{
-				rating.scale.set(0.85, 0.73);
+				rating.scale.set(0.87, 0.73);
 				FlxTween.tween(rating.scale, {x: 0.7, y: 0.7}, 0.3, {ease: FlxEase.circOut});
 			}
 			
 			if(ClientPrefs.data.exratbounce == true && ClientPrefs.data.exratingDisplay)
             {
-                theEXrating.scale.set(0.85, 0.85);
+                theEXrating.scale.set(0.8, 0.8);
                 var targetAngle:Float = (Math.random() * 10) * (Math.random() > .5 ? 1 : -1);
                     FlxTween.tween(theEXrating, {angle: targetAngle}, 0.025, {ease: FlxEase.quartOut,
                         onComplete: function(tween:FlxTween) {

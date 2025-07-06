@@ -401,7 +401,7 @@ class CustomFadeTransition extends FlxSubState {
                     }
                 }
             }
-        } else if (ClientPrefs.data.customFadeStyle == 'Vanilla') {
+        } else if (ClientPrefs.data.customFadeStyle == 'V-Slice') {
             super.update(elapsed);
             final height: Float = FlxG.height * Math.max(camera.zoom, 0.001);
             final targetPos: Float = transGradient.height + 50 * Math.max(camera.zoom, 0.001);

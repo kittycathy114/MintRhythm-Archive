@@ -89,7 +89,7 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 			Language.get("timebar_desc"),
 			'timeBarType',
 			STRING,
-			[Language.get("timebar_left"), Language.get("timebar_elapsed"), Language.get("timebar_song"), Language.get("timebar_disabled")]);
+			['Time Left', 'Time Elapsed', 'Song Name', 'Disabled']);
 		addOption(option);
 
 		var option:Option = new Option("Flashing Lights",
@@ -128,14 +128,15 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 		addOption(option);
 		option.onChange = onChangeFPSCounter;
 
-		#if native
+		//新版lime跟git库的不同，故临时禁用此项，之后也许会改
+		/*#if native
 		var option:Option = new Option("VSync",
 			Language.get("vsync_desc"),
 			'vsync',
 			BOOL);
 		option.onChange = onChangeVSync;
 		addOption(option);
-		#end
+		#end*/
 		
 		var option:Option = new Option("Pause Music:",
 			Language.get("pausemusic_desc"),
@@ -306,8 +307,8 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 			Main.fpsVar.visible = ClientPrefs.data.showFPS;
 	}
 
-	#if native
+	/*#if native
 	function onChangeVSync()
 		lime.app.Application.current.window.vsync = ClientPrefs.data.vsync;
-	#end
+	#end*/
 }

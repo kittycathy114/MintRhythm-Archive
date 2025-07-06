@@ -27,18 +27,14 @@ class Conductor
 	public static function judgeNote(arr:Array<Rating>, diff:Float=0):Rating
 	{
 		var data:Array<Rating> = arr;
-		// 使用更精确的浮点数计算差值
-		var absDiff:Float = diff;
 		
-		// 增加判定补正
-		var compensation:Float = (diff < 0) ? 0.2 : 0; // 给提前按键一个很小的补正,让手感更好
-		absDiff = Math.max(0, absDiff - compensation);
+		var absDiff:Float = Math.abs(diff);
 
 		// Perfect判定逻辑 
-		if (!ClientPrefs.data.rmperfect && absDiff <= data[4].hitWindow) 
+		if (!ClientPrefs.data.rmPerfect && absDiff <= data[4].hitWindow) 
 			return data[4];
 
-		var dataFix:Int = !ClientPrefs.data.rmperfect ? 2 : 1;
+		var dataFix:Int = !ClientPrefs.data.rmPerfect ? 2 : 1;
 		
 		// 使用插值来平滑判定
 		for(i in 0...data.length - dataFix)

@@ -61,6 +61,9 @@ class OptionsState extends MusicBeatState
 	private var scrollDamping:Float = 0.75; // 调整阻尼系数
 	private var currentScrollSpeed:Float = 0;
 
+	private var lastClickTime:Float = 0;
+	private var lastClickIndex:Int = -1;
+
 	function openSelectedSubstate(label:String) {
 		if (label != Language.get("adjust_delay_combo") && label != Language.get("extra_options")) {
 			removeTouchPad();
@@ -175,6 +178,9 @@ class OptionsState extends MusicBeatState
 		super.create();
 		FlxG.mouse.visible = true;
 
+		// 默认选中中间项
+		curSelected = Std.int(options.length / 2);
+		changeSelection(0); // 刷新高亮和描述
 	}
 
 	override function closeSubState()
@@ -194,6 +200,9 @@ class OptionsState extends MusicBeatState
 	var exiting = false;
 	override function update(elapsed:Float) {
 		super.update(elapsed);
+
+		// 始终显示鼠标指针
+		FlxG.mouse.visible = true;
 
 		// 仅在允许输入时处理按键
 		if (allowInput) {
@@ -225,23 +234,54 @@ class OptionsState extends MusicBeatState
 			}
 		}
 
-		// 处理拖动
+		// --- 鼠标拖动与点击选项 ---
 		var mouse:FlxMouse = FlxG.mouse;
-		if (mouse.justPressed) {
-			startTouchY = mouse.y;
+		var mouseOverOption:Int = -1;
+		for (i in 0...grpOptions.length) {
+			var opt = grpOptions.members[i];
+			if (mouse.x >= opt.x && mouse.x <= opt.x + opt.width && mouse.y >= opt.y && mouse.y <= opt.y + opt.height) {
+				mouseOverOption = i;
+				break;
+			}
 		}
 
-		if (mouse.pressed && startTouchY != null) {
+		// 鼠标单击选项自动更改选中项
+		if (mouseOverOption != -1 && mouse.justPressed) {
+			if (curSelected != mouseOverOption) {
+				changeSelection(mouseOverOption - curSelected);
+			}
+			// 双击检测
+			var now = FlxG.game.ticks / 1000.0;
+			if (lastClickIndex == mouseOverOption && (now - lastClickTime) < 0.25) {
+				openSelectedSubstate(options[mouseOverOption]);
+			}
+			lastClickTime = now;
+			lastClickIndex = mouseOverOption;
+			startTouchY = mouse.y; // 允许拖动
+		}
+
+		// 鼠标右键双击也可进入
+		if (mouseOverOption != -1 && mouse.justPressedRight) {
+			openSelectedSubstate(options[mouseOverOption]);
+		}
+
+		// 拖动惯性与视差优化
+		if (mouse.pressed && startTouchY != null && mouseOverOption == -1) {
 			var deltaY = mouse.y - startTouchY;
+			currentScrollSpeed = deltaY / elapsed; // 记录速度
 			scrollOffset += deltaY;
 			startTouchY = mouse.y;
-		} else {
+		} else if (!mouse.pressed) {
 			startTouchY = null;
 		}
 
-		// 应用阻尼效果
-		currentScrollSpeed = FlxMath.lerp(currentScrollSpeed, 0, 1 - scrollDamping * elapsed * 5);
-		scrollOffset += currentScrollSpeed * elapsed;
+		// 应用阻尼和惯性
+		if (!mouse.pressed && Math.abs(currentScrollSpeed) > 1) {
+			scrollOffset += currentScrollSpeed * elapsed;
+			currentScrollSpeed *= Math.pow(scrollDamping, elapsed * 10);
+		} else if (!mouse.pressed) {
+			currentScrollSpeed = 0;
+		}
 
 		// 限制滚动范围
 		var minScroll = -(itemSpacing * (options.length - 1));
@@ -251,8 +291,9 @@ class OptionsState extends MusicBeatState
 		// 平滑滚动动画，减轻滚动程度
 		for (i in 0...grpOptions.length)
 		{
-			var targetY = optionTargetYs[i] + scrollOffset;
-			optionCurYs[i] = FlxMath.lerp(targetY, optionCurYs[i], Math.exp(-elapsed * 6)); // 减轻滚动速度
+			// 视差影响减轻（0.4~0.6）
+			var targetY = optionTargetYs[i] + scrollOffset * (0.4 + 0.6 * (i / (grpOptions.length-1)));
+			optionCurYs[i] = FlxMath.lerp(targetY, optionCurYs[i], Math.exp(-elapsed * 6));
 			grpOptions.members[i].y = optionCurYs[i];
 		}
 

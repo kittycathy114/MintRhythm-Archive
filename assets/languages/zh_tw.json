@@ -217,6 +217,7 @@
     "firstlaunch_back": "上一步",
     "firstlaunch_yes": "是",
     "firstlaunch_no": "否",
-    "bot_addscore_desc": "若啟用，當BOT命中箭頭時也會加分\n（不算最終成績哦）"
-
+    "bot_addscore_desc": "若啟用，當BOT命中箭頭時也會加分\n（不算最終成績哦）",
+    "use_system_cursor_desc": "啟用後，遊戲將使用系統預設的滑鼠指標。",
+    "nps_desc": "在HUD中顯示每秒音符數（NPS）"
 }

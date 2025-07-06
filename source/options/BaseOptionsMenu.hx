@@ -146,15 +146,41 @@ class BaseOptionsMenu extends MusicBeatSubstate
 	var bindingBlack:FlxSprite;
 	var bindingText:Alphabet;
 	var bindingText2:Alphabet;
+	var lastMouseClickTime:Float = 0;
+	var lastMouseClickIndex:Int = -1;
 	override function update(elapsed:Float)
 	{
 		super.update(elapsed);
 
-		if(bindingKey)
-		{
-			bindingKeyUpdate(elapsed);
-			return;
+#if !mobile
+		// 鼠标滚轮切换选项
+		if (FlxG.mouse.wheel != 0) {
+			changeSelection(FlxG.mouse.wheel > 0 ? -1 : 1);
 		}
+
+		// 检测鼠标左右键
+		if (FlxG.mouse.justPressed) {
+			var now = FlxG.game.ticks / 1000.0;
+			if (lastMouseClickIndex == curSelected && (now - lastMouseClickTime) < 0.25) {
+				// 双击，什么都不做（交由右键或其它逻辑处理）
+			} else {
+				// 单击，BOOL类型切换
+				if (curOption != null && curOption.type == BOOL) {
+					FlxG.sound.play(Paths.sound('scrollMenu'));
+					curOption.setValue((curOption.getValue() == true) ? false : true);
+					curOption.change();
+					reloadCheckboxes();
+				}
+			}
+			lastMouseClickTime = now;
+			lastMouseClickIndex = curSelected;
+		}
+		if (FlxG.mouse.justPressedRight) {
+			// 鼠标右键退出
+			close();
+			FlxG.sound.play(Paths.sound('cancelMenu'));
+		}
+#end
 
 		if (controls.UI_UP_P)
 		{

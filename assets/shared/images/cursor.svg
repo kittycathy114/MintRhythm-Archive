@@ -1,0 +1,13 @@
+<svg width="50" height="50" xmlns="http://www.w3.org/2000/svg">
+ <title>Cursor</title>
+
+ <g>
+  <title>Layer 1</title>
+  <line fill="none" stroke="#000" stroke-width="5" x1="-12.02564" y1="0.05983" x2="-11.92308" y2="0.05983" id="svg_6" stroke-linejoin="undefined" stroke-linecap="undefined"/>
+  <path transform="rotate(1.03887 14.8738 33.594)" stroke="#000" id="svg_5" d="m0.85858,37.00129c15.38192,6.37285 28.07664,-8.33373 28.03031,-8.41543" opacity="NaN" stroke-width="5" fill="none"/>
+  <path transform="rotate(-20.5391 7.95738 13.9674)" id="svg_19" d="m-4.51737,28.81593l12.47475,-29.69697l12.47475,29.69697l-24.94949,0z" stroke="#000" fill="#ffffff"/>
+  <ellipse transform="rotate(-18.8203 14.7924 31.806)" stroke="#000" ry="5.1606" rx="12.40177" id="svg_20" cy="31.80602" cx="14.79239" stroke-width="5" fill="#007fff"/>
+  <line fill="none" stroke="#000" stroke-width="5" x1="2" y1="-1.91919" x2="2" y2="39" id="svg_21" stroke-linejoin="undefined" stroke-linecap="undefined"/>
+  <line stroke="#000" stroke-width="5" stroke-linecap="undefined" stroke-linejoin="undefined" id="svg_22" y2="29.39394" x2="29.30303" y1="0" x1="3" fill="none"/>
+ </g>
+</svg>

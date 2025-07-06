@@ -17,7 +17,7 @@ import states.TitleState;
 	public var wideScreen:Bool = false;
 	public var hitboxType:String = "Gradient";
 	public var popUpRating:Bool = true;
-	public var vsync:Bool = false;
+	//public var vsync:Bool = false;
 	public var gameOverVibration:Bool = false;
 	public var fpsRework:Bool = false;
 	
@@ -98,7 +98,7 @@ import states.TitleState;
 	public var rainbowfpscounter:Bool = false;
 	public var exgameversion:Bool = true;
 	public var exratingDisplay:Bool = true;
-	public var rmperfect:Bool = false;	
+	public var rmPerfect:Bool = false;	
 	public var ratbounce:Bool = true;
 	public var scoretxtstyle:String = 'MintRhythm';
 	public var rmmsTimeTxt:Bool = false;
@@ -123,7 +123,7 @@ import states.TitleState;
 	public var extrahp: Bool = true;
 	public var botplayStyle:String = "Psych(New)";
 	public var showcaseStyle:String = "Psych";
-	public var fpstxtStyle:String = "Psych";
+	public var fpsFont:String = "Psych";
 	public var timebarStyle:String = "Psych";
 	public var legacynotepos:Bool = false;
 	public var ratingsPos:String = "camHUD";
@@ -134,6 +134,12 @@ import states.TitleState;
 	public var enableModsImport:Bool = false; // Enable Mods Import in the main menu
 	public var eventDebug:Bool = true;
 	public var botplayScore:Bool = true;
+	public var systemCursor:Bool = false;
+	public var hudZoomStyle:String = "default";
+	public var showNPS:Bool = true; // Show NPS in the HUD
+	public var showResultScreen:Bool = true; // Show the result screen after finishing a song
+	public var comboSprDisplay:Bool = false; //据说这是官方废稿，我不知道就是了
+
 }
 
 class ClientPrefs {

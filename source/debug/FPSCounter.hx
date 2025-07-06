@@ -43,6 +43,9 @@ class FPSCounter extends TextField
 
 	public var os:String = '';
 
+	public var drawTime:Float = 0;
+	public var activeCount:Int = 0;
+
 	public function new(x:Float = 10, y:Float = 10, color:Int = 0x000000)
 	{
 		super();
@@ -68,6 +71,7 @@ class FPSCounter extends TextField
 		lastFramerateUpdateTime = Timer.stamp();
 		prevTime = Lib.getTimer();
 		updateTime = prevTime + 500;
+		framesCount = 0;
 	}
 
 
@@ -75,11 +79,12 @@ class FPSCounter extends TextField
 	{
 		var fpsText = 'FPS: $currentFPS\nMemory: ${flixel.util.FlxStringUtil.formatBytes(memoryMegas)}';
         var infoText = '';
-        
         if(ClientPrefs.data.exgameversion) {
             infoText = '\nPsych Engine v${MainMenuState.psychEngineVersion}'
                     + '\nMintRhythm Extended v${MainMenuState.mrExtendVersion}'
-                    + '\nCommit: ${GameVersion.getGitCommitCount()} (${GameVersion.getGitCommitHash()})';
+                    + '\nCommit: ${GameVersion.getGitCommitCount()} (${GameVersion.getGitCommitHash()})'
+					+ '\nUpdate: ${updateTime}ms (${activeCount} objs loaded)'
+					+ '\nFPS Mode: ${ClientPrefs.data.fpsRework ? "Rework" : "Legacy"}'; // 添加FPS模式显示
         }
         
         if(ClientPrefs.data.showRunningOS) infoText += os;
@@ -92,53 +97,30 @@ class FPSCounter extends TextField
             textColor = 0xFFFF0000;
 	}
 
-	var deltaTimeout:Float = 0.0;
 	private override function __enterFrame(deltaTime:Float):Void
 	{
-		if (ClientPrefs.data.fpsRework)
-		{
-			// Flixel keeps reseting this to 60 on focus gained
-			if (FlxG.stage.window.frameRate != ClientPrefs.data.framerate && FlxG.stage.window.frameRate != FlxG.game.focusLostFramerate)
-				FlxG.stage.window.frameRate = ClientPrefs.data.framerate;
-
-			var currentTime = openfl.Lib.getTimer();
-			framesCount++;
-
-			if (currentTime >= updateTime)
-			{
-				var elapsed = currentTime - prevTime;
-				currentFPS = Math.ceil((framesCount * 1000) / elapsed);
-				framesCount = 0;
-				prevTime = currentTime;
-				updateTime = currentTime + 500;
-			}
-
-			// Set Update and Draw framerate to the current FPS every 1.5 second to prevent "slowness" issue
-			if ((FlxG.updateFramerate >= currentFPS + 5 || FlxG.updateFramerate <= currentFPS - 5)
-				&& haxe.Timer.stamp() - lastFramerateUpdateTime >= 1.5
-				&& currentFPS >= 30)
-			{
-				FlxG.updateFramerate = FlxG.drawFramerate = currentFPS;
-				lastFramerateUpdateTime = haxe.Timer.stamp();
+		// 统一使用更精确的FPS计算方式
+		var currentTime = openfl.Lib.getTimer();
+		framesCount++;
+		
+		if (currentTime >= updateTime) {
+			var elapsed = currentTime - prevTime;
+			currentFPS = Math.ceil((framesCount * 1000) / elapsed);
+			framesCount = 0;
+			prevTime = currentTime;
+			updateTime = currentTime + 500;
+		}
+		
+		// 仅在传统模式下检查并更新Flixel帧率
+		if (!ClientPrefs.data.fpsRework) {
+			// 防止Flixel帧率设置被意外改变
+			if (FlxG.updateFramerate != ClientPrefs.data.framerate ||
+				FlxG.drawFramerate != ClientPrefs.data.framerate) {
+				FlxG.updateFramerate = ClientPrefs.data.framerate;
+				FlxG.drawFramerate = ClientPrefs.data.framerate;
 			}
 		}
-		else
-		{
-			final now:Float = haxe.Timer.stamp() * 1000;
-			times.push(now);
-			while (times[0] < now - 1000)
-				times.shift();
-			// prevents the overlay from updating every frame, why would you need to anyways @crowplexus
-			if (deltaTimeout < 50)
-			{
-				deltaTimeout += deltaTime;
-				return;
-			}
-
-			currentFPS = times.length < FlxG.updateFramerate ? times.length : FlxG.updateFramerate;
-			deltaTimeout = 0.0;
-		}
-
+		
 		updateText();
 	}
 

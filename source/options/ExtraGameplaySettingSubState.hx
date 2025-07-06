@@ -62,13 +62,19 @@ class ExtraGameplaySettingSubState extends BaseOptionsMenu
 
 		option = new Option('Remove Perfect! Note Judgement',
 			Language.get("rm_perfect_judge_desc"),
-			'rmperfect',
+			'rmPerfect',
 			BOOL);
 		addOption(option);
 
 		option = new Option('Remove the "ms" offset',
 			Language.get("rm_ms_offset_desc"),
 			'rmmsTimeTxt',
+			BOOL);
+
+		addOption(option);
+		option = new Option('Show NPS',
+			Language.get("nps_desc"),
+			'showNPS',
 			BOOL);
 		addOption(option);
 
@@ -102,9 +108,15 @@ class ExtraGameplaySettingSubState extends BaseOptionsMenu
 			BOOL);
 		addOption(option);
 
-		option = new Option('SongScore Added When BotPlay',
+		option = new Option('Score Incrase When BotPlay',
 			Language.get("bot_addscore_desc"),
 			'botplayScore',
+			BOOL);
+		addOption(option);
+
+		option = new Option('Show "Combo" Sprite',
+			Language.get("gameplay_combospr_desc"),
+			'comboSprDisplay',
 			BOOL);
 		addOption(option);
 
@@ -138,28 +150,28 @@ class ExtraGameplaySettingSubState extends BaseOptionsMenu
 			Language.get("iconbop_style_desc"),
 			'iconbopstyle',
 			STRING,
-			['Psych', 'OS', 'MintRhythm', 'Kade', 'Leather', 'SB', 'Vanilla', 'VSlice(New)', 'VSlice(Old)', 'Codename', 'Dave', 'NovaFlare', 'NONE']);
+			['Psych', 'OS', 'MintRhythm', 'Leather', 'SB', 'Vanilla', 'VSlice(New)', 'VSlice(Old)', 'Codename', 'Dave', 'NovaFlare', 'NONE']);
 		addOption(option);
 
 		option = new Option('ScoreTxt Style',
 			Language.get("scoretxt_style_desc"),
 			'scoretxtstyle',
 			STRING,
-			['Psych', 'OS', 'MintRhythm', 'Kade']);
+			['Psych', 'OS', 'MintRhythm', 'Kade', 'V-Slice']);
 		addOption(option);
 
 		option = new Option('Loading Style',
 			Language.get("loading_style_desc"),
 			'customFadeStyle',
 			STRING,
-			['Vanilla', 'NovaFlare Move', 'NovaFlare Alpha', 'MintRhythm', 'BA_Schale_Glow']);
+			['V-Slice', 'NovaFlare Move', 'NovaFlare Alpha', 'MintRhythm', 'BA_Schale_Glow']);
 		addOption(option);
 
 		option = new Option('TimeBar Style',
 			Language.get("timebar_style_desc"),
 			'timebarStyle',
 			STRING,
-			['default', 'Kade']);
+			['default', 'Kade (Legacy)']);
 		addOption(option);
 
 		option = new Option('BotPlayTxt Style',
@@ -176,9 +188,9 @@ class ExtraGameplaySettingSubState extends BaseOptionsMenu
 			['Kade', 'Psych']);
 		addOption(option);
 
-		option = new Option('FPS-Txt Style',
+		option = new Option('FPS-Counter Font',
 			Language.get("fpstxt_style_desc"),
-			'fpstxtStyle',
+			'fpsFont',
 			STRING,
 			['default', 'Kade']);
 		addOption(option);
@@ -190,7 +202,14 @@ class ExtraGameplaySettingSubState extends BaseOptionsMenu
 			['camHUD', 'camGame']);
 		addOption(option);
 
-		option = new Option('Cam HUD Zoom',
+		option = new Option('HUD Zoom Speed',
+			Language.get("hud_zoomstyle_desc"),
+			'hudZoomStyle',
+			STRING,
+			['default', 'Fast', 'Slow', 'Kade']);
+		addOption(option);
+
+		option = new Option('HUD Zoom',
 			Language.get("camhud_zoom_desc"),
 			'hudSize',
 			FLOAT);
@@ -219,8 +238,8 @@ class ExtraGameplaySettingSubState extends BaseOptionsMenu
 			'fpsSpacing',
 			INT);
 		option.scrollSpeed = 1;
-		option.minValue = 5;
-		option.maxValue = 50;
+		option.minValue = 0;
+		option.maxValue = 200;
 		option.changeValue = 5;
 		option.onChange = function() {
 			if(Main.fpsVar != null) {
@@ -278,6 +297,16 @@ class ExtraGameplaySettingSubState extends BaseOptionsMenu
 		addOption(option);
 		#end
 
+		option = new Option('Use System Cursor',
+			Language.get("use_system_cursor_desc"),
+			'systemCursor',
+			BOOL);
+		option.onChange = function() {
+			FlxG.mouse.useSystemCursor = ClientPrefs.data.systemCursor;
+			ClientPrefs.saveSettings();
+		};
+		addOption(option);
+
 		super();
 	}
 
@@ -310,9 +339,6 @@ class ExtraGameplaySettingSubState extends BaseOptionsMenu
 			if (errorBg != null) errorBg.visible = false;
 		});
 	}
-
-	function onChangeHitsoundVolume()
-		FlxG.sound.play(Paths.sound('hitsound'), ClientPrefs.data.hitsoundVolume);
 
 	function onChangeAutoPause()
 		FlxG.autoPause = ClientPrefs.data.autoPause;

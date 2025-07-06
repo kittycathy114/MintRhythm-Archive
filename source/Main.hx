@@ -47,6 +47,11 @@ class Main extends Sprite
 
 	public static final platform:String = #if mobile "Phones" #else "PCs" #end;
 
+
+	static var _updateTimes:Array<Float> = [];
+	static var _drawTimes:Array<Float> = [];
+	static var _activeCounts:Array<Int> = [];
+
 	// You can pretty much ignore everything from here on - your code should go in your states.
 
 	public static function main():Void
@@ -200,7 +205,8 @@ class Main extends Sprite
 		LimeSystem.allowScreenTimeout = ClientPrefs.data.screensaver;
 		#end
 
-		Application.current.window.vsync = ClientPrefs.data.vsync;
+		//Application.current.window.vsync = ClientPrefs.data.vsync;
+		//临时禁用(?)，因为更换了新的lime库(git(v8.1.2) → v8.2.2)
 
 		// shader coords fix
 		FlxG.signals.gameResized.add(function (w, h) {
@@ -220,6 +226,8 @@ class Main extends Sprite
 		#if (desktop && !mobile)
 		setCustomCursor();
 		#end
+		Lib.current.stage.addEventListener(Event.ENTER_FRAME, onEnterFrame);	
+		
 	}
 
 	static function resetSpriteCache(sprite:Sprite):Void {
@@ -227,6 +235,45 @@ class Main extends Sprite
 		        sprite.__cacheBitmap = null;
 			sprite.__cacheBitmapData = null;
 		}
+	}
+
+	function onEnterFrame(e:Event):Void {
+		var lastPerfUpdate:Float = 0.0;
+
+    	var now = haxe.Timer.stamp();
+    
+    	if (fpsVar != null) {
+        	// 添加当前帧数据
+       	 	_updateTimes.push(FlxG.elapsed * 1000); // 转换为毫秒
+        	_drawTimes.push(0); // 实际项目中需要真实绘制时间
+        	_activeCounts.push(FlxG.state.members.length);
+        
+        	// 每0.5秒计算平均值
+        	if (now - lastPerfUpdate > 0.5) {
+				@:privateAccess
+            	fpsVar.updateTime = Std.int(calculateAverage(_updateTimes));
+            	fpsVar.drawTime = calculateAverage(_drawTimes);
+            	fpsVar.activeCount = Std.int(calculateAverageI(_activeCounts));
+
+            	_updateTimes = [];
+            	_drawTimes = [];
+            	_activeCounts = [];
+            
+            	lastPerfUpdate = now;
+        	}
+    	}
+	}
+
+	inline function calculateAverage(arr:Array<Float>):Float {
+    	var sum = 0.0;
+    	for (v in arr) sum += v;
+    	return arr.length > 0 ? sum / arr.length : 0;
+	}
+
+	inline function calculateAverageI(arr:Array<Int>):Float {
+    	var sum = 0;
+    	for (v in arr) sum += v;
+    	return arr.length > 0 ? sum / arr.length : 0;
 	}
 
 	function toggleFullScreen(event:KeyboardEvent) {

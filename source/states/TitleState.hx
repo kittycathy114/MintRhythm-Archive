@@ -123,6 +123,7 @@ class TitleState extends MusicBeatState
 
 		// 预加载tips内容
 		CoolUtil.tipsShow();
+		FlxG.mouse.useSystemCursor = ClientPrefs.data.systemCursor;
 	}
 
 	var logoBl:FlxSprite;

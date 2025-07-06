@@ -48,7 +48,7 @@ class Rating
 		rating.noteSplash = false;
 		ratingsData.push(rating);
 
-		if (!ClientPrefs.data.rmperfect){
+		if (!ClientPrefs.data.rmPerfect){
     		var rating:Rating = new Rating('perfect');
     		rating.ratingMod = 1;
     		rating.score = 400;
