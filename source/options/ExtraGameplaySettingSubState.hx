@@ -188,12 +188,20 @@ class ExtraGameplaySettingSubState extends BaseOptionsMenu
 			['Kade', 'Psych']);
 		addOption(option);
 
+		/*
+		// 修复 FPS 字体选项
 		option = new Option('FPS-Counter Font',
 			Language.get("fpstxt_style_desc"),
 			'fpsFont',
 			STRING,
 			['default', 'Kade']);
-		addOption(option);
+		option.onChange = function() {
+			if (Main.fpsVar != null) {
+				Main.fpsVar.updateFont(); // 调用字体更新方法
+				Main.fpsVar.positionFPS(10, 3); // 重新定位确保布局正确
+			}
+		};
+		addOption(option);*/
 
 		option = new Option('Ratings Position',
 			Language.get("ratings_pos_desc"),

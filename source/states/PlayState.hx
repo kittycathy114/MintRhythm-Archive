@@ -116,7 +116,7 @@ class PlayState extends MusicBeatState
     public var targetZoom:Float = ClientPrefs.data.hudSize;
 
 
-	// 在类变量区添加
+	// 丝滑血条
 	var displayedHealth:Float = 1; // 用于显示的血量
 	var healthLerp:Float = 1; // 用于平滑过渡的血量
 	var maxHealth:Float = 2; // 默认血条最大值
@@ -715,7 +715,7 @@ class PlayState extends MusicBeatState
 			botplayTxt.y = ClientPrefs.data.botplayStyle == 'Kade' ? healthBar.y + 120 : healthBar.y + 70;
 
 		watermarkText = new FlxText(20, FlxG.height - 20, 0, 
-			SONG.song + "-" + Difficulty.getString().toUpperCase() + ' | PE: MRE v${MainMenuState.mrExtendVersion}', 
+			SONG.song + "-" + Difficulty.getString().toUpperCase() + ' | M.R.E v${MainMenuState.mrExtendVersion}', 
 				14);
 		watermarkText.setFormat(Paths.font("vcr.ttf"), 16, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		watermarkText.scrollFactor.set();
@@ -2078,8 +2078,8 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
     		// 先定义一个映射表，或者用简单的switch/if
     		var styleNum:Float = switch (ClientPrefs.data.hudZoomStyle)
     		{
-        		case "Kade": 12;
-        		case "Fast": 20;
+        		case "Kade": 8;
+        		case "Fast": 12;
         		case "Slow": 1.5;
         		default: 3.125; // 默认
     		}
@@ -3140,7 +3140,7 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 			rating.screenCenter();
 			rating.x = placement - 40;
 			rating.y -= 60;
-			rating.acceleration.y = 550 * playbackRate * playbackRate;
+			//rating.acceleration.y = 550 * playbackRate * playbackRate;
 			rating.velocity.y -= FlxG.random.int(140, 175) * playbackRate;
 			rating.velocity.x -= FlxG.random.int(0, 10) * playbackRate;
 			rating.visible = (!ClientPrefs.data.hideHud && showRating);
@@ -3152,7 +3152,7 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 			theEXrating.screenCenter();
 			theEXrating.x = placement - 40;
 			theEXrating.y -= 60;
-			theEXrating.acceleration.y = 550 * playbackRate * playbackRate;
+			//theEXrating.acceleration.y = 550 * playbackRate * playbackRate;
 			theEXrating.velocity.y -= FlxG.random.int(140, 175) * playbackRate;
 			theEXrating.velocity.x -= FlxG.random.int(0, 10) * playbackRate;
 			theEXrating.visible = (!ClientPrefs.data.hideHud && showEXRating);
@@ -3165,7 +3165,7 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 			var comboSpr:FlxSprite = new FlxSprite().loadGraphic(Paths.image(uiFolder + 'combo' + uiPostfix));
 			comboSpr.screenCenter();
 			comboSpr.x = placement;
-			comboSpr.acceleration.y = FlxG.random.int(200, 300) * playbackRate * playbackRate;
+			//comboSpr.acceleration.y = FlxG.random.int(200, 300) * playbackRate * playbackRate;
 			comboSpr.velocity.y -= FlxG.random.int(140, 160) * playbackRate;
 			comboSpr.velocity.x += FlxG.random.int(1, 10) * playbackRate;
 			comboSpr.visible = (!ClientPrefs.data.hideHud && showCombo);
@@ -3173,6 +3173,40 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 			comboSpr.y -= ClientPrefs.data.comboOffset[1];
 			comboSpr.antialiasing = antialias;
 			comboSpr.y += 160;
+
+			if (ClientPrefs.data.comboStacking)
+			{
+				// 原版向上跳跃逻辑
+				rating.acceleration.y = 550 * playbackRate * playbackRate;
+				rating.velocity.y -= FlxG.random.int(140, 175) * playbackRate;
+
+				theEXrating.acceleration.y = 550 * playbackRate * playbackRate;
+				theEXrating.velocity.y -= FlxG.random.int(140, 175) * playbackRate;
+
+				comboSpr.acceleration.y = FlxG.random.int(200, 300) * playbackRate * playbackRate;
+				comboSpr.velocity.y -= FlxG.random.int(140, 160) * playbackRate;
+			}
+			else
+			{
+				// 新版向下缓慢加速逻辑
+				var slowGravity:Int = FlxG.random.int(50, 120); // 随机重力值，实现不固定加速度
+
+				rating.acceleration.y = slowGravity * playbackRate * playbackRate;
+				//rating.velocity.y = 0; // 初始速度为0
+				rating.velocity.y = FlxG.random.int(30, 60);
+
+				slowGravity = FlxG.random.int(120, 200); // 随机重力值，实现不固定加速度
+
+				theEXrating.acceleration.y = slowGravity * playbackRate * playbackRate;
+				//theEXrating.velocity.y = 0;
+				theEXrating.velocity.y = FlxG.random.int(30, 60);
+
+				slowGravity = FlxG.random.int(50, 120); // 随机重力值，实现不固定加速度
+
+				comboSpr.acceleration.y = slowGravity * playbackRate * playbackRate;
+				//comboSpr.velocity.y = 0;
+				comboSpr.velocity.y = FlxG.random.int(30, 60);
+			}
 
 			if (!PlayState.isPixelStage)
 			{
@@ -3240,8 +3274,24 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 					numScore.setGraphicSize(Std.int(numScore.width * daPixelZoom));
 				numScore.updateHitbox();
 
-				numScore.acceleration.y = FlxG.random.int(200, 300) * playbackRate * playbackRate;
-				numScore.velocity.y -= FlxG.random.int(140, 160) * playbackRate;
+				if (ClientPrefs.data.comboStacking)
+				{
+					// 原版向上跳跃逻辑
+					numScore.acceleration.y = FlxG.random.int(200, 300) * playbackRate * playbackRate;
+					numScore.velocity.y -= FlxG.random.int(140, 160) * playbackRate;
+				}
+				else
+				{
+					var slowGravity:Int = FlxG.random.int(80, 150); // 随机重力值
+					// 新版向下缓慢加速逻辑
+					numScore.acceleration.y = slowGravity * playbackRate * playbackRate;
+					numScore.velocity.y = 0; // 初始速度为0
+					numScore.velocity.y = FlxG.random.int(30, 60);
+
+				}
+				
+				//numScore.acceleration.y = FlxG.random.int(200, 300) * playbackRate * playbackRate;
+				//numScore.velocity.y -= FlxG.random.int(140, 160) * playbackRate;
 				numScore.velocity.x = FlxG.random.float(-5, 5) * playbackRate;
 				numScore.visible = !ClientPrefs.data.hideHud;
 				numScore.antialiasing = antialias;

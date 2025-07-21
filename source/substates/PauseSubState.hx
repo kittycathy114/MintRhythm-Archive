@@ -80,7 +80,7 @@ class PauseSubState extends MusicBeatSubstate
 		levelInfo.updateHitbox();
 		add(levelInfo);
 
-		var levelDifficulty:FlxText = new FlxText(20, 15 + 32, 0, Difficulty.getString().toUpperCase(), 32);
+		var levelDifficulty:FlxText = new FlxText(20, 15 + 32, 0, 'DIFFICULTY: ${Difficulty.getString().toUpperCase()}', 32);
 		levelDifficulty.scrollFactor.set();
 		levelDifficulty.setFormat(Paths.font('vcr.ttf'), 32);
 		levelDifficulty.updateHitbox();
@@ -104,16 +104,29 @@ class PauseSubState extends MusicBeatSubstate
 		formatText.updateHitbox();
 		add(formatText);
 
-		var blueballedTxt:FlxText = new FlxText(20, 15 + 160, 0, LanguageBasic.getPhrase("blueballed", "Blueballed: {1}", [PlayState.deathCounter]), 32);
+		var blueballedTxt:FlxText = new FlxText(20, 15 + 224, 0, LanguageBasic.getPhrase("blueballed", "Blueballed: {1}", [PlayState.deathCounter]), 32);
 		blueballedTxt.scrollFactor.set();
 		blueballedTxt.setFormat(Paths.font('vcr.ttf'), 32);
 		blueballedTxt.updateHitbox();
 		add(blueballedTxt);
 
+		var sprcialInstText:FlxText = new FlxText(20, 15 + 160, 0, 'Special Inst: ${PlayState.SONG.specialInst}', 32);
+		sprcialInstText.scrollFactor.set();
+		sprcialInstText.setFormat(Paths.font('vcr.ttf'), 32);
+		sprcialInstText.updateHitbox();
+		add(sprcialInstText);
+
+		var specialVocalText:FlxText = new FlxText(20, 15 + 192, 0, 'Special Vocal: ${PlayState.SONG.specialVocal}', 32);
+		specialVocalText.scrollFactor.set();
+		specialVocalText.setFormat(Paths.font('vcr.ttf'), 32);
+		specialVocalText.updateHitbox();
+		add(specialVocalText);
+
 		practiceText = new FlxText(20, 15 + 197, 0, LanguageBasic.getPhrase("Practice Mode").toUpperCase(), 32);
 		practiceText.scrollFactor.set();
 		practiceText.setFormat(Paths.font('vcr.ttf'), 32);
 		practiceText.x = FlxG.width - (practiceText.width + 20);
+		practiceText.y = FlxG.height - (practiceText.height + 55);
 		practiceText.updateHitbox();
 		practiceText.visible = PlayState.instance.practiceMode;
 		add(practiceText);
@@ -133,6 +146,8 @@ class PauseSubState extends MusicBeatSubstate
 		bpmText.alpha = 0;
 		speedText.alpha = 0;
 		formatText.alpha = 0;
+		sprcialInstText.alpha = 0;
+		specialVocalText.alpha = 0;
 
 		levelInfo.x = FlxG.width - (levelInfo.width + 20);
 		levelDifficulty.x = FlxG.width - (levelDifficulty.width + 20);
@@ -140,6 +155,8 @@ class PauseSubState extends MusicBeatSubstate
 		speedText.x = FlxG.width - (speedText.width + 20);
 		formatText.x = FlxG.width - (formatText.width + 20);
 		blueballedTxt.x = FlxG.width - (blueballedTxt.width + 20);
+		specialVocalText.x = FlxG.width - (specialVocalText.width + 20);
+		sprcialInstText.x = FlxG.width - (sprcialInstText.width + 20);
 
 		FlxTween.tween(bg, {alpha: 0.6}, 0.3, {ease: FlxEase.quartInOut});
 		FlxTween.tween(levelInfo, {alpha: 1, y: 20}, 0.3, {ease: FlxEase.quartInOut, startDelay: 0.1});
@@ -147,7 +164,9 @@ class PauseSubState extends MusicBeatSubstate
 		FlxTween.tween(bpmText, {alpha: 1, y: bpmText.y + 5}, 0.3, {ease: FlxEase.quartInOut, startDelay: 0.3});
 		FlxTween.tween(speedText, {alpha: 1, y: speedText.y + 5}, 0.3, {ease: FlxEase.quartInOut, startDelay: 0.4}); 
 		FlxTween.tween(formatText, {alpha: 1, y: formatText.y + 5}, 0.3, {ease: FlxEase.quartInOut, startDelay: 0.5});
-		FlxTween.tween(blueballedTxt, {alpha: 1, y: blueballedTxt.y + 5}, 0.3, {ease: FlxEase.quartInOut, startDelay: 0.6});
+		if (PlayState.SONG.specialInst != null) FlxTween.tween(sprcialInstText, {alpha: 1, y: sprcialInstText.y + 5}, 0.3, {ease: FlxEase.quartInOut, startDelay: 0.6});
+		if (PlayState.SONG.specialVocal != null) FlxTween.tween(specialVocalText, {alpha: 1, y: specialVocalText.y + 5}, 0.3, {ease: FlxEase.quartInOut, startDelay: 0.7});
+		FlxTween.tween(blueballedTxt, {alpha: 1, y: blueballedTxt.y + 5}, 0.3, {ease: FlxEase.quartInOut, startDelay: 0.8});
 
 		grpMenuShit = new FlxTypedGroup<Alphabet>();
 		add(grpMenuShit);

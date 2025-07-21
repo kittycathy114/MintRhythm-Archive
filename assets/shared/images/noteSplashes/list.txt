@@ -2,4 +2,5 @@ Diamond
 Electric
 Sparkles
 Vanilla
+Leather
 None

@@ -632,6 +632,8 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 			player2: 'dad',
 			gfVersion: 'gf',
 			stage: 'stage',
+			specialInst: "", // 添加默认值
+    		specialVocal: "", // 添加默认值
 			format: 'psych_v1'
 		};
 		Song.chartPath = null;
@@ -666,6 +668,9 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 		scrollSpeedStepper.value = PlayState.SONG.speed;
 		audioOffsetStepper.value = Reflect.hasField(PlayState.SONG, 'offset') ? PlayState.SONG.offset : 0;
 		Conductor.offset = audioOffsetStepper.value;
+
+		specialInstInputText.text = PlayState.SONG.specialInst != null ? PlayState.SONG.specialInst : '';
+		specialVocalInputText.text = PlayState.SONG.specialVocal != null ? PlayState.SONG.specialVocal : '';
 
 		playerDropDown.selectedLabel = PlayState.SONG.player1;
 		opponentDropDown.selectedLabel = PlayState.SONG.player2;
@@ -1757,7 +1762,7 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 					{
 						if(hitSoundPlayer && note.mustPress)
 						{
-							FlxG.sound.play(Paths.sound('hitsound'), hitsoundPlayerStepper.value);
+							FlxG.sound.play(Paths.sound('hitsoundP'), hitsoundPlayerStepper.value);
 							hitSoundPlayer = false;
 						}
 						else if(hitSoundOpp && !note.mustPress)
@@ -3490,6 +3495,8 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 	var bpmStepper:PsychUINumericStepper;
 	var scrollSpeedStepper:PsychUINumericStepper;
 	var audioOffsetStepper:PsychUINumericStepper;
+ 	var specialInstInputText:PsychUIInputText;
+	var specialVocalInputText:PsychUIInputText;
 
 	var stageDropDown:PsychUIDropDownMenu;
 	var playerDropDown:PsychUIDropDownMenu;
@@ -3566,10 +3573,26 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 			updateWaveform();
 		};
 
+		specialInstInputText = new PsychUIInputText(objX + 200, objY + 80, 100, '', 8);
+		specialInstInputText.onChange = function(old:String, cur:String)
+		{
+			PlayState.SONG.specialInst = specialInstInputText.text;
+			//updateWaveform();
+		};
+
+		specialVocalInputText = new PsychUIInputText(objX + 200, objY + 140, 100, '', 8);
+		specialVocalInputText.onChange = function(old:String, cur:String)
+		{
+			PlayState.SONG.specialVocal = specialVocalInputText.text;
+			//updateWaveform();
+		};
+
 		tab_group.add(new FlxText(songNameInputText.x, songNameInputText.y - 15, 80, Language.get('charting_songname')).setFormat(Paths.font(Language.get('uitab_font'))));
 		tab_group.add(songNameInputText);
 		tab_group.add(allowVocalsCheckBox);
 		tab_group.add(reloadAudioButton);
+		tab_group.add(specialInstInputText);
+		tab_group.add(specialVocalInputText);
 		#if (mac || mobile)
 		tab_group.add(reloadJsonButton);
 		#end
@@ -3621,6 +3644,9 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 		tab_group.add(new FlxText(playerDropDown.x, playerDropDown.y - 15, 80, 'Player:').setFormat(Paths.font(Language.get('uitab_font'))));
 		tab_group.add(new FlxText(opponentDropDown.x, opponentDropDown.y - 15, 80, 'Opponent:').setFormat(Paths.font(Language.get('uitab_font'))));
 		tab_group.add(new FlxText(girlfriendDropDown.x, girlfriendDropDown.y - 15, 80, 'Girlfriend:').setFormat(Paths.font(Language.get('uitab_font'))));
+		tab_group.add(new FlxText(specialInstInputText.x, specialInstInputText.y - 15, 200, 'Special Inst:').setFormat(Paths.font(Language.get('uitab_font'))));
+		tab_group.add(new FlxText(specialVocalInputText.x, specialVocalInputText.y - 15, 200, 'Special Vocal:').setFormat(Paths.font(Language.get('uitab_font'))));
+
 		tab_group.add(stageDropDown);
 		tab_group.add(girlfriendDropDown);
 		tab_group.add(opponentDropDown);
@@ -3914,9 +3940,9 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 	
 				updateChartData();
 				#if mobile
-				StorageUtil.saveContent('events.json', PsychJsonPrinter.print({events: PlayState.SONG.events, format: 'psych_v1'}, ['events']));
+				StorageUtil.saveContent('events.json', PsychJsonPrinter.print({events: PlayState.SONG.events, format: 'mr_psych_v1'}, ['events']));
 				#else
-				fileDialog.save('events.json', PsychJsonPrinter.print({events: PlayState.SONG.events, format: 'psych_v1'}, ['events']),
+				fileDialog.save('events.json', PsychJsonPrinter.print({events: PlayState.SONG.events, format: 'mr_psych_v1'}, ['events']),
 					function() showOutput('Events saved successfully to: ${fileDialog.path}'), null,
 					function() showOutput('Error on saving events!', true));
 				#end

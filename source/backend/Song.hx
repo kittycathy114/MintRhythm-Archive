@@ -30,6 +30,8 @@ typedef SwagSong =
 
 	@:optional var arrowSkin:String;
 	@:optional var splashSkin:String;
+	@:optional var specialInst:String;
+    @:optional var specialVocal:String;
 }
 
 typedef SwagSection =
@@ -63,6 +65,8 @@ class Song
 	public var player2:String = 'dad';
 	public var gfVersion:String = 'gf';
 	public var format:String = 'psych_v1';
+	public var specialInst:String;
+	public var specialVocal:String;
 
 	public static function convert(songJson:Dynamic) // Convert old charts to psych_v1 format
 	{
