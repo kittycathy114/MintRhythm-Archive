@@ -107,6 +107,11 @@ class PlayState extends MusicBeatState
 	var chartingInfo:FlxText;
 	var fpsVarInitialX:Float = 10;
 	
+	//专为仿LE设计的时间条多颜色（大概吧）
+	var timeBarLeftColor:FlxColor = FlxColor.BLACK;
+	var timeBarRightColor:FlxColor = FlxColor.WHITE;
+	var timeBarLeftColorTarget:FlxColor = FlxColor.BLACK;
+	var timeBarRightColorTarget:FlxColor = FlxColor.WHITE;
 
 	var eventDebugGroup:FlxTypedGroup<FlxText>; // 存储事件文本的组
 	var eventTexts:Array<FlxText> = []; // 活动事件文本数组
@@ -272,6 +277,7 @@ class PlayState extends MusicBeatState
 	public var botplaySine:Float = 0;
 	public var botplayTxt:FlxText;
 	public var watermarkText:FlxText;
+	public var ratingCounter:FlxText;
 
 	public var iconP1:HealthIcon;
 	public var iconP2:HealthIcon;
@@ -599,26 +605,72 @@ class PlayState extends MusicBeatState
 
 		Conductor.songPosition = -Conductor.crochet * 5 + Conductor.offset;
 		var showTime:Bool = (ClientPrefs.data.timeBarType != 'Disabled');
-		timeTxt = new FlxText(STRUM_X + (FlxG.width / 2) - 248, 19, 400, "", 32);
-		timeTxt.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		timeTxt = new FlxText(STRUM_X + (FlxG.width / 2) - 248, 19, FlxG.width, "", 32);
+		timeTxt.setFormat(Paths.font("vcr.ttf"), ClientPrefs.data.timebarStyle == "Leather" ? 16 : 32, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE,
+			FlxColor.BLACK);
 		timeTxt.scrollFactor.set();
 		timeTxt.alpha = 0;
-		timeTxt.borderSize = 2;
+		timeTxt.borderSize = ClientPrefs.data.timebarStyle == "Leather" ? 1 : 2;
 		timeTxt.visible = updateTime = showTime;
-		if(ClientPrefs.data.downScroll) timeTxt.y = FlxG.height - 44;
-		if(ClientPrefs.data.timeBarType == 'Song Name') timeTxt.text = SONG.song;
+		timeTxt.screenCenter(X);
 
-		timeBar = new Bar(0, timeTxt.y + (timeTxt.height / 4), ClientPrefs.data.timebarStyle == "Kade (Legacy)" ? "timeBarKEL" : "timeBar" , function() return songPercent, 0, 1);
+		// 先处理下滚动对文本的影响（仅非Leather样式）
+		if (ClientPrefs.data.downScroll && ClientPrefs.data.timebarStyle != "Leather")
+		{
+			timeTxt.y = FlxG.height - 44;
+		}
+
+		// 设置初始文本
+		if (ClientPrefs.data.timeBarType == 'Song Name' && ClientPrefs.data.timebarStyle != "Leather")
+		{
+			timeTxt.text = SONG.song;
+		}
+
+		// 确定条样式
+		var barStyle:String = "timeBar";
+		if (ClientPrefs.data.timebarStyle == "Kade (Legacy)")
+		{
+			barStyle = "barKEL";
+		}
+		else if (ClientPrefs.data.timebarStyle == "Leather")
+		{
+			barStyle = "barLE";
+		}
+
+		// 创建时间条
+		timeBar = new Bar(0, 0, barStyle, function() return songPercent, 0, 1);
 		timeBar.scrollFactor.set();
 		timeBar.screenCenter(X);
 		timeBar.alpha = 0;
 		timeBar.visible = showTime;
+
+		// 特殊处理Leather样式
+		if (ClientPrefs.data.timebarStyle == "Leather")
+		{
+			timeTxt.size = 16;
+			timeBar.y = FlxG.height - (timeBar.height + 1);
+			timeTxt.y = timeBar.y - (timeTxt.height); // 精确居中在条上方
+			timeTxt.text = SONG.song + " ~ " + Difficulty.getString().toUpperCase() + " (0:00)";
+		}
+		// 处理其他样式的下滚动
+		else if (ClientPrefs.data.downScroll)
+		{
+			timeBar.y = FlxG.height - (timeBar.height + 1);
+			timeTxt.y = timeBar.y - (timeTxt.height / 4); // 保持与条的位置关系
+		}
+		// 默认位置（非下滚动）
+		else
+		{
+			timeBar.y = timeTxt.y + (timeTxt.height / 4);
+		}
+
 		uiGroup.add(timeBar);
 		uiGroup.add(timeTxt);
 
 		noteGroup.add(strumLineNotes);
 
-		if(ClientPrefs.data.timeBarType == 'Song Name')
+		// 处理Song Name类型的调整（排除Leather样式）
+		if (ClientPrefs.data.timeBarType == 'Song Name' && ClientPrefs.data.timebarStyle != "Leather")
 		{
 			timeTxt.size = 24;
 			timeTxt.y += 3;
@@ -714,9 +766,9 @@ class PlayState extends MusicBeatState
 		if(ClientPrefs.data.downScroll)
 			botplayTxt.y = ClientPrefs.data.botplayStyle == 'Kade' ? healthBar.y + 120 : healthBar.y + 70;
 
-		watermarkText = new FlxText(20, FlxG.height - 20, 0, 
-			SONG.song + "-" + Difficulty.getString().toUpperCase() + ' | M.R.E v${MainMenuState.mrExtendVersion}', 
-				14);
+		watermarkText = new FlxText(20, FlxG.height - 20, 0,
+			(ClientPrefs.data.timebarStyle == 'Leather' ? 'MRE v${MainMenuState.mrExtendVersion}' : '${SONG.song}-${Difficulty.getString().toUpperCase()} | M.R.E v${MainMenuState.mrExtendVersion}'),
+			14);
 		watermarkText.setFormat(Paths.font("vcr.ttf"), 16, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		watermarkText.scrollFactor.set();
 		watermarkText.borderSize = 1.2;
@@ -724,6 +776,15 @@ class PlayState extends MusicBeatState
 		watermarkText.alpha = 0.8;
 		watermarkText.visible = !ClientPrefs.data.hideHud;
 		uiGroup.add(watermarkText);
+
+		ratingCounter = new FlxText(6, 0, 0, "", 20);
+		ratingCounter.setFormat(Paths.font("vcr.ttf"), 16, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		//ratingCounter.borderSize = 1;
+		ratingCounter.scrollFactor.set();
+		ratingCounter.visible = !ClientPrefs.data.hideHud;
+		//ratingCounter.y = (FlxG.height - ratingCounter.height * 5) / 2;
+		ratingCounter.screenCenter(Y);
+		uiGroup.add(ratingCounter);
 
 		uiGroup.cameras = [camHUD];
 		noteGroup.cameras = [camHUD];
@@ -2057,14 +2118,38 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 			var curTime:Float = Math.max(0, Conductor.songPosition - ClientPrefs.data.noteOffset);
 			songPercent = (curTime / songLength);
 
-			var songCalc:Float = (songLength - curTime);
-			if(ClientPrefs.data.timeBarType == 'Time Elapsed') songCalc = curTime;
+			if (ClientPrefs.data.timebarStyle == "Leather")
+			{
+				// 计算剩余时间
+				var timeLeft:Float = Math.max(0, songLength - curTime);
+				var secondsLeft:Int = Math.floor(timeLeft / 1000);
+				if (secondsLeft < 0)
+					secondsLeft = 0;
 
-			var secondsTotal:Int = Math.floor(songCalc / 1000);
-			if(secondsTotal < 0) secondsTotal = 0;
+				// 构建显示文本
+				var timeString:String = FlxStringUtil.formatTime(secondsLeft, false);
+				var displayText:String = SONG.song + " ~ " + Difficulty.getString().toUpperCase() + " (" + timeString + ")";
 
-			if(ClientPrefs.data.timeBarType != 'Song Name')
+				// 添加模式标识
+				if (cpuControlled)
+					displayText += " (BOT)";
+				if (practiceMode)
+					displayText += " (NO DEATH)";
+
+				timeTxt.text = displayText;
+			}
+			else if (ClientPrefs.data.timeBarType != 'Song Name')
+			{
+				var songCalc:Float = (songLength - curTime);
+				if (ClientPrefs.data.timeBarType == 'Time Elapsed')
+					songCalc = curTime;
+
+				var secondsTotal:Int = Math.floor(songCalc / 1000);
+				if (secondsTotal < 0)
+					secondsTotal = 0;
+
 				timeTxt.text = FlxStringUtil.formatTime(secondsTotal, false);
+			}
 		}
 
 		//if (camZooming)
@@ -2142,6 +2227,14 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 			setOnLuas('nps', nps);
 			setOnLuas('maxFPS', maxNPS);	
 
+		}
+
+		if (ClientPrefs.data.timebarStyle == 'Leather')
+		{
+			// 使用FlxColor.interpolate进行颜色插值
+			timeBarLeftColor = FlxColor.interpolate(timeBarLeftColor, timeBarLeftColorTarget, elapsed * 5);
+			timeBarRightColor = FlxColor.interpolate(timeBarRightColor, timeBarRightColorTarget, elapsed * 5);
+			timeBar.setColors(timeBarRightColor, timeBarLeftColor); //不是，timebar的颜色是反着来的吗？
 		}
 
 		if (generatedMusic)
@@ -2240,39 +2333,77 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
         iconP2.scale.x = FlxMath.lerp(iconP2.scale.x, targetScale, elapsed * 12);
         iconP2.scale.y = FlxMath.lerp(iconP2.scale.y, targetScale, elapsed * 12);
     } else {
-        // 旧版本多风格整合逻辑
-        var speedMultiplier:Float = switch (ClientPrefs.data.iconbopstyle) {
-            case "Codename":	20;
-            case "Leather": 	7;
-            case "SB":      	20;
-            case "VSlice(New)": 14;
-            case "VSlice(Old)": 36;
-            case "Dave": 		22;
-            case "NovaFlare": 	22;
-            default: 			9;
-        }
+			var speedMultiplier:Float = switch (ClientPrefs.data.iconbopstyle)
+			{
+				case "Codename": 20;
+				case "Leather": 7;
+				case "SB": 20;
+				case "VSlice(New)": 14;
+				case "VSlice(Old)": 36;
+				case "Dave": 22;
+				case "NovaFlare": 22;
+				default: 9;
+			}
 
-        if (["VSlice(New)", "VSlice(Old)", "Leather", "Dave", "Codename"].contains(ClientPrefs.data.iconbopstyle)) {
-            var rate:Float = elapsed * speedMultiplier * playbackRate;
-            iconP1.scale.x = FlxMath.lerp(iconP1.scale.x, 1, rate);
-            iconP1.scale.y = FlxMath.lerp(iconP1.scale.y, 1, rate);
-            iconP2.scale.x = FlxMath.lerp(iconP2.scale.x, 1, rate);
-            iconP2.scale.y = FlxMath.lerp(iconP2.scale.y, 1, rate);
-        }/*这是NF原生的
-		else if (["NovaFlare"].contains(ClientPrefs.data.iconbopstyle)) 
-		{
-		var mult:Float = FlxMath.lerp(1, iconP1.scale.x, FlxMath.bound((1 - (elapsed * 9 * playbackRate)) / 1.1, 0, 1));
-		iconP1.scale.set(mult, mult);
+			// 定义缩放上限
+			final ICON_BOUND:Float = 1.2; // 1 + 0.2
 
-		var mult:Float = FlxMath.lerp(1, iconP2.scale.x, FlxMath.bound((1 - (elapsed * 9 * playbackRate)) / 1.1, 0, 1));
-		iconP2.scale.set(mult, mult);
-		}*/
-		else {
-            var mult:Float = FlxMath.lerp(1, iconP1.scale.x, Math.exp(-elapsed * speedMultiplier * playbackRate));
-            iconP1.scale.set(mult, mult);
-            mult = FlxMath.lerp(1, iconP2.scale.x, Math.exp(-elapsed * speedMultiplier * playbackRate));
-            iconP2.scale.set(mult, mult);
-        }
+			if (["VSlice(New)", "VSlice(Old)", "Dave", "Codename"].contains(ClientPrefs.data.iconbopstyle))
+			{
+				var rate:Float = elapsed * speedMultiplier * playbackRate;
+				iconP1.scale.x = FlxMath.lerp(iconP1.scale.x, 1, rate);
+				iconP1.scale.y = FlxMath.lerp(iconP1.scale.y, 1, rate);
+				iconP2.scale.x = FlxMath.lerp(iconP2.scale.x, 1, rate);
+				iconP2.scale.y = FlxMath.lerp(iconP2.scale.y, 1, rate);
+
+				// 添加边界限制和碰撞箱更新
+				iconP1.scale.x = FlxMath.bound(iconP1.scale.x, Math.NEGATIVE_INFINITY, ICON_BOUND);
+				iconP1.scale.y = FlxMath.bound(iconP1.scale.y, Math.NEGATIVE_INFINITY, ICON_BOUND);
+				iconP2.scale.x = FlxMath.bound(iconP2.scale.x, Math.NEGATIVE_INFINITY, ICON_BOUND);
+				iconP2.scale.y = FlxMath.bound(iconP2.scale.y, Math.NEGATIVE_INFINITY, ICON_BOUND);
+
+				iconP1.updateHitbox();
+				iconP2.updateHitbox();
+			}
+			else if (ClientPrefs.data.iconbopstyle == "Leather")
+			{
+				// 专用Leather引擎效果
+				var rate:Float = elapsed * speedMultiplier * playbackRate;
+
+				// 应用线性插值
+				iconP1.scale.set(FlxMath.lerp(iconP1.scale.x, 1, rate), FlxMath.lerp(iconP1.scale.y, 1, rate));
+				iconP2.scale.set(FlxMath.lerp(iconP2.scale.x, 1, rate), FlxMath.lerp(iconP2.scale.y, 1, rate));
+
+				// 更新碰撞箱
+				iconP1.updateHitbox();
+				iconP2.updateHitbox();
+
+				// 应用边界限制
+				iconP1.scale.set(FlxMath.bound(iconP1.scale.x, Math.NEGATIVE_INFINITY, ICON_BOUND),
+					FlxMath.bound(iconP1.scale.y, Math.NEGATIVE_INFINITY, ICON_BOUND));
+				iconP2.scale.set(FlxMath.bound(iconP2.scale.x, Math.NEGATIVE_INFINITY, ICON_BOUND),
+					FlxMath.bound(iconP2.scale.y, Math.NEGATIVE_INFINITY, ICON_BOUND));
+
+				// 再次更新碰撞箱
+				iconP1.updateHitbox();
+				iconP2.updateHitbox();
+			}
+			else
+			{
+				var mult:Float = FlxMath.lerp(1, iconP1.scale.x, Math.exp(-elapsed * speedMultiplier * playbackRate));
+				iconP1.scale.set(mult, mult);
+				mult = FlxMath.lerp(1, iconP2.scale.x, Math.exp(-elapsed * speedMultiplier * playbackRate));
+				iconP2.scale.set(mult, mult);
+
+				// 添加边界限制
+				iconP1.scale.x = FlxMath.bound(iconP1.scale.x, Math.NEGATIVE_INFINITY, ICON_BOUND);
+				iconP1.scale.y = FlxMath.bound(iconP1.scale.y, Math.NEGATIVE_INFINITY, ICON_BOUND);
+				iconP2.scale.x = FlxMath.bound(iconP2.scale.x, Math.NEGATIVE_INFINITY, ICON_BOUND);
+				iconP2.scale.y = FlxMath.bound(iconP2.scale.y, Math.NEGATIVE_INFINITY, ICON_BOUND);
+
+				iconP1.updateHitbox();
+				iconP2.updateHitbox();
+			}
     }
     
     // 统一更新碰撞框
@@ -3125,6 +3256,7 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 		}
 
 		if(cpuControlled) cpuHits++;
+		updateRatingCounters();
 
 		var uiFolder:String = "";
 		var antialias:Bool = ClientPrefs.data.antialiasing;
@@ -3189,21 +3321,21 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 			else
 			{
 				// 新版向下缓慢加速逻辑
-				var slowGravity:Int = FlxG.random.int(50, 120); // 随机重力值，实现不固定加速度
+				var slowGravity:Int = FlxG.random.int(40, 100); // 随机重力值，实现不固定加速度
 
-				rating.acceleration.y = slowGravity * playbackRate * playbackRate;
+				//rating.acceleration.y = slowGravity * playbackRate * playbackRate;
 				//rating.velocity.y = 0; // 初始速度为0
 				rating.velocity.y = FlxG.random.int(30, 60);
 
-				slowGravity = FlxG.random.int(120, 200); // 随机重力值，实现不固定加速度
+				slowGravity = FlxG.random.int(60, 120); // 随机重力值，实现不固定加速度
 
-				theEXrating.acceleration.y = slowGravity * playbackRate * playbackRate;
+				//theEXrating.acceleration.y = slowGravity * playbackRate * playbackRate;
 				//theEXrating.velocity.y = 0;
-				theEXrating.velocity.y = FlxG.random.int(30, 60);
+				theEXrating.velocity.y = FlxG.random.int(40, 80);
 
-				slowGravity = FlxG.random.int(50, 120); // 随机重力值，实现不固定加速度
+				slowGravity = FlxG.random.int(40, 100); // 随机重力值，实现不固定加速度
 
-				comboSpr.acceleration.y = slowGravity * playbackRate * playbackRate;
+				//comboSpr.acceleration.y = slowGravity * playbackRate * playbackRate;
 				//comboSpr.velocity.y = 0;
 				comboSpr.velocity.y = FlxG.random.int(30, 60);
 			}
@@ -3282,10 +3414,10 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 				}
 				else
 				{
-					var slowGravity:Int = FlxG.random.int(80, 150); // 随机重力值
+					var slowGravity:Int = FlxG.random.int(60, 100); // 随机重力值
 					// 新版向下缓慢加速逻辑
-					numScore.acceleration.y = slowGravity * playbackRate * playbackRate;
-					numScore.velocity.y = 0; // 初始速度为0
+					//numScore.acceleration.y = slowGravity * playbackRate * playbackRate;
+					//numScore.velocity.y = 0; // 初始速度为0
 					numScore.velocity.y = FlxG.random.int(30, 60);
 
 				}
@@ -3331,6 +3463,34 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 			});
 		}
 	}
+
+	function updateRatingCounters() {
+	// 获取各评分数量
+	var perfects = ratingsData[4].hits;
+	var sicks = ratingsData[0].hits;
+	var goods = ratingsData[1].hits;
+	var bads = ratingsData[2].hits;
+	var shits = ratingsData[3].hits;
+	
+	// 计算分母
+	var MA_denominator = sicks + goods + bads + shits; // 非完美总数
+	var PA_denominator = goods + bads + shits;         // 良好及以下总数
+	
+	// 构建文本
+	ratingCounter.text = (!ClientPrefs.data.rmPerfect ? "Perfects: " + perfects + "\n" : "")
+		+ "Sicks: " + sicks
+		+ "\nGoods: " + goods
+		+ "\nBads: " + bads
+		+ "\nShits: " + shits
+		
+		// 添加MA/PA计算
+		+ (ClientPrefs.data.rmPerfect ? "" : 
+			(perfects > 0 && MA_denominator > 0 ? 
+				"\nMA: " + FlxMath.roundDecimal(perfects / MA_denominator, 2) : ""))
+				
+		+ (PA_denominator > 0 ? 
+			"\nPA: " + FlxMath.roundDecimal((perfects + sicks) / PA_denominator, 2) : "");
+}
 
 	public var strumsBlocked:Array<Bool> = [];
 	private function onKeyPress(event:KeyboardEvent):Void
@@ -3871,6 +4031,22 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 	var lastStepHit:Int = -1;
 	override function stepHit()
 	{
+		if (ClientPrefs.data.timebarStyle == 'Leather')
+		{
+			var section = SONG.notes[curSection];
+			if (section != null)
+			{
+				if (section.mustHitSection)
+				{
+					timeBarRightColorTarget = FlxColor.fromRGB(boyfriend.healthColorArray[0], boyfriend.healthColorArray[1], boyfriend.healthColorArray[2]);
+				}
+				else
+				{
+					timeBarRightColorTarget = FlxColor.fromRGB(dad.healthColorArray[0], dad.healthColorArray[1], dad.healthColorArray[2]);
+				}
+			}
+		}
+
 		super.stepHit();
 
 		if(curStep == lastStepHit) {
@@ -3901,7 +4077,7 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
                 	iconP1.scale.set(1.4, 1.4);
                 	iconP2.scale.set(1.4, 1.4);
 
-            	case "Leather" | "VSlice(New)" | "Codename" | "VSlice(Old)" | "NovaFlare":
+            	case /*"Leather" | */"VSlice(New)" | "Codename" | "VSlice(Old)" | "NovaFlare":
                 	iconP1.scale.set(1.3, 1.3);
                 	iconP2.scale.set(1.3, 1.3);
                 

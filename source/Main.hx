@@ -23,6 +23,9 @@ import lime.graphics.Image;
 import states.CopyState;
 #end
 import backend.Highscore;
+import flixel.tweens.FlxTween;
+import flixel.tweens.FlxEase;
+import backend.ClientPrefs;
 
 // NATIVE API STUFF, YOU CAN IGNORE THIS AND SCROLL //
 #if (linux && !debug)
@@ -44,6 +47,11 @@ class Main extends Sprite
 	public static var fpsVar:FPSCounter;
 
 	public static final platform:String = #if mobile "Phones" #else "PCs" #end;
+
+	// Background volume control variables
+	private var backgroundVolumeTween:FlxTween;
+	private var originalVolume:Float = 1.0;
+	private var isInBackground:Bool = false;
 
 	// You can pretty much ignore everything from here on - your code should go in your states.
 
@@ -236,6 +244,55 @@ class Main extends Sprite
 		#if (desktop && !mobile)
 		setCustomCursor();
 		#end
+		
+		// 添加应用激活/停用事件监听
+		Lib.current.stage.addEventListener(Event.DEACTIVATE, onAppDeactivate);
+		Lib.current.stage.addEventListener(Event.ACTIVATE, onAppActivate);
+	}
+	
+	// 应用进入后台时调用
+	private function onAppDeactivate(e:Event):Void
+	{
+		if (isInBackground || !ClientPrefs.data.backgroundVolume) return;
+		isInBackground = true;
+		
+		// 取消正在进行的恢复动画（如果存在）
+		if (backgroundVolumeTween != null) {
+			backgroundVolumeTween.cancel();
+			backgroundVolumeTween = null;
+		}
+		
+		// 保存当前音量
+		originalVolume = FlxG.sound.volume;
+		
+		// 创建降低音量的动画
+		backgroundVolumeTween = FlxTween.tween(FlxG.sound, {volume: ClientPrefs.data.backgroundVolumeLevel}, 1, {
+			ease: FlxEase.quadOut,
+			onComplete: function(twn:FlxTween) {
+				backgroundVolumeTween = null;
+			}
+		});
+	}
+	
+	// 应用回到前台时调用
+	private function onAppActivate(e:Event):Void
+	{
+		if (!isInBackground || !ClientPrefs.data.backgroundVolume) return;
+		isInBackground = false;
+		
+		// 取消正在进行的降低动画（如果存在）
+		if (backgroundVolumeTween != null) {
+			backgroundVolumeTween.cancel();
+			backgroundVolumeTween = null;
+		}
+		
+		// 创建恢复音量的动画
+		backgroundVolumeTween = FlxTween.tween(FlxG.sound, {volume: originalVolume}, 0.5, {
+			ease: FlxEase.quadOut,
+			onComplete: function(twn:FlxTween) {
+				backgroundVolumeTween = null;
+			}
+		});
 	}
 
 	static function resetSpriteCache(sprite:Sprite):Void

@@ -126,6 +126,24 @@ class ExtraGameplaySettingSubState extends BaseOptionsMenu
 			BOOL);
 		addOption(option);
 
+		option = new Option('Background Volume',
+			Language.get("background_volume_desc"),
+			'backgroundVolume',
+			BOOL);
+		addOption(option);
+
+		option = new Option('Background Volume Level',
+			Language.get("background_volume_level_desc"),
+			'backgroundVolumeLevel',
+			PERCENT);
+		option.scrollSpeed = 2;
+		option.minValue = 0;
+		option.maxValue = 1;
+		option.changeValue = 0.02;
+		option.decimals = 2;
+		addOption(option);
+
+
 		// PERCENT 类型设置
 		option = new Option('Ratings Opacity',
 			Language.get("rating_opac_desc"),
@@ -171,7 +189,7 @@ class ExtraGameplaySettingSubState extends BaseOptionsMenu
 			Language.get("timebar_style_desc"),
 			'timebarStyle',
 			STRING,
-			['default', 'Kade (Legacy)']);
+			['default', 'Kade (Legacy)', 'Leather']);
 		addOption(option);
 
 		option = new Option('BotPlayTxt Style',

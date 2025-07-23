@@ -86,13 +86,13 @@ class PauseSubState extends MusicBeatSubstate
 		levelDifficulty.updateHitbox();
 		add(levelDifficulty);
 
-		var bpmText:FlxText = new FlxText(20, 15 + 64, 0, 'BPM: ${Conductor.bpm}', 32);
+		var bpmText:FlxText = new FlxText(20, 15 + 64, 0, 'cur.BPM: ${Conductor.bpm}', 32);
 		bpmText.scrollFactor.set();
 		bpmText.setFormat(Paths.font('vcr.ttf'), 32);
 		bpmText.updateHitbox();
 		add(bpmText);
 
-		var speedText:FlxText = new FlxText(20, 15 + 96, 0, 'NOTE SPEED: ${PlayState.instance.songSpeed}x ${PlayState.SONG.speed != PlayState.instance.songSpeed ? '(${PlayState.SONG.speed}x)' : ''}', 32);
+		var speedText:FlxText = new FlxText(20, 15 + 96, 0, 'cur.NOTE SPEED: ${PlayState.instance.songSpeed}x${PlayState.SONG.speed != PlayState.instance.songSpeed ? '(${PlayState.SONG.speed}x)' : ''}', 32);
 		speedText.scrollFactor.set();
 		speedText.setFormat(Paths.font('vcr.ttf'), 32);
 		speedText.updateHitbox();
@@ -104,9 +104,12 @@ class PauseSubState extends MusicBeatSubstate
 		formatText.updateHitbox();
 		add(formatText);
 
-		var blueballedTxt:FlxText = new FlxText(20, 15 + 224, 0, LanguageBasic.getPhrase("blueballed", "Blueballed: {1}", [PlayState.deathCounter]), 32);
+		//var blueballedTxt:FlxText = new FlxText(20, 15 + 160, 0, LanguageBasic.getPhrase("blueballed", "Blueballed: {1}", [PlayState.deathCounter]), 32);
+		var blueballedTxt:FlxText = new FlxText(20, 15 + 160, 0, 'RETRIED: ${PlayState.deathCounter}', 32);
 		blueballedTxt.scrollFactor.set();
 		blueballedTxt.setFormat(Paths.font('vcr.ttf'), 32);
+		if (PlayState.SONG.specialInst != null) blueballedTxt.y += 32;
+		if (PlayState.SONG.specialVocal != null) blueballedTxt.y += 32;
 		blueballedTxt.updateHitbox();
 		add(blueballedTxt);
 
@@ -116,10 +119,11 @@ class PauseSubState extends MusicBeatSubstate
 		sprcialInstText.updateHitbox();
 		add(sprcialInstText);
 
-		var specialVocalText:FlxText = new FlxText(20, 15 + 192, 0, 'Special Vocal: ${PlayState.SONG.specialVocal}', 32);
+		var specialVocalText:FlxText = new FlxText(20, 15 + 160, 0, 'Special Vocal: ${PlayState.SONG.specialVocal}', 32);
 		specialVocalText.scrollFactor.set();
 		specialVocalText.setFormat(Paths.font('vcr.ttf'), 32);
 		specialVocalText.updateHitbox();
+		if (PlayState.SONG.specialInst != null) specialVocalText.y += 32;
 		add(specialVocalText);
 
 		practiceText = new FlxText(20, 15 + 197, 0, LanguageBasic.getPhrase("Practice Mode").toUpperCase(), 32);
