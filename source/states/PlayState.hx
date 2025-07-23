@@ -3273,8 +3273,8 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 			rating.x = placement - 40;
 			rating.y -= 60;
 			//rating.acceleration.y = 550 * playbackRate * playbackRate;
-			rating.velocity.y -= FlxG.random.int(140, 175) * playbackRate;
-			rating.velocity.x -= FlxG.random.int(0, 10) * playbackRate;
+			//rating.velocity.y -= FlxG.random.int(140, 175) * playbackRate;
+			//rating.velocity.x -= FlxG.random.int(0, 10) * playbackRate;
 			rating.visible = (!ClientPrefs.data.hideHud && showRating);
 			rating.x += ClientPrefs.data.comboOffset[0] - 30;
 			rating.y -= ClientPrefs.data.comboOffset[1] - 130;
@@ -3285,8 +3285,8 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 			theEXrating.x = placement - 40;
 			theEXrating.y -= 60;
 			//theEXrating.acceleration.y = 550 * playbackRate * playbackRate;
-			theEXrating.velocity.y -= FlxG.random.int(140, 175) * playbackRate;
-			theEXrating.velocity.x -= FlxG.random.int(0, 10) * playbackRate;
+			//theEXrating.velocity.y -= FlxG.random.int(140, 175) * playbackRate;
+			//theEXrating.velocity.x -= FlxG.random.int(0, 10) * playbackRate;
 			theEXrating.visible = (!ClientPrefs.data.hideHud && showEXRating);
 			theEXrating.x += ClientPrefs.data.comboOffset[4] - 220;
 			theEXrating.y += -ClientPrefs.data.comboOffset[5] + 150;
@@ -3298,8 +3298,8 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 			comboSpr.screenCenter();
 			comboSpr.x = placement;
 			//comboSpr.acceleration.y = FlxG.random.int(200, 300) * playbackRate * playbackRate;
-			comboSpr.velocity.y -= FlxG.random.int(140, 160) * playbackRate;
-			comboSpr.velocity.x += FlxG.random.int(1, 10) * playbackRate;
+			//comboSpr.velocity.y -= FlxG.random.int(140, 160) * playbackRate;
+			//comboSpr.velocity.x += FlxG.random.int(1, 10) * playbackRate;
 			comboSpr.visible = (!ClientPrefs.data.hideHud && showCombo);
 			comboSpr.x += ClientPrefs.data.comboOffset[0] + 60;
 			comboSpr.y -= ClientPrefs.data.comboOffset[1];
