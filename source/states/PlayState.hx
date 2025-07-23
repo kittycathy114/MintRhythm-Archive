@@ -605,22 +605,18 @@ class PlayState extends MusicBeatState
 
 		Conductor.songPosition = -Conductor.crochet * 5 + Conductor.offset;
 		var showTime:Bool = (ClientPrefs.data.timeBarType != 'Disabled');
-		timeTxt = new FlxText(STRUM_X + (FlxG.width / 2) - 248, 19, FlxG.width, "", 32);
+
+		timeTxt = new FlxText(STRUM_X + (FlxG.width / 2) - 248, 19, 400, "", 32);
 		timeTxt.setFormat(Paths.font("vcr.ttf"), ClientPrefs.data.timebarStyle == "Leather" ? 16 : 32, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE,
 			FlxColor.BLACK);
 		timeTxt.scrollFactor.set();
 		timeTxt.alpha = 0;
 		timeTxt.borderSize = ClientPrefs.data.timebarStyle == "Leather" ? 1 : 2;
 		timeTxt.visible = updateTime = showTime;
-		timeTxt.screenCenter(X);
 
-		// 先处理下滚动对文本的影响（仅非Leather样式）
-		if (ClientPrefs.data.downScroll && ClientPrefs.data.timebarStyle != "Leather")
-		{
+		if (ClientPrefs.data.downScroll)
 			timeTxt.y = FlxG.height - 44;
-		}
 
-		// 设置初始文本
 		if (ClientPrefs.data.timeBarType == 'Song Name' && ClientPrefs.data.timebarStyle != "Leather")
 		{
 			timeTxt.text = SONG.song;
@@ -637,8 +633,7 @@ class PlayState extends MusicBeatState
 			barStyle = "barLE";
 		}
 
-		// 创建时间条
-		timeBar = new Bar(0, 0, barStyle, function() return songPercent, 0, 1);
+		timeBar = new Bar(0, timeTxt.y + (timeTxt.height / 4), barStyle, function() return songPercent, 0, 1);
 		timeBar.scrollFactor.set();
 		timeBar.screenCenter(X);
 		timeBar.alpha = 0;
@@ -649,16 +644,12 @@ class PlayState extends MusicBeatState
 		{
 			timeTxt.size = 16;
 			timeBar.y = FlxG.height - (timeBar.height + 1);
-			timeTxt.y = timeBar.y - (timeTxt.height); // 精确居中在条上方
+			timeTxt.y = timeBar.y - (timeTxt.height);
 			timeTxt.text = SONG.song + " ~ " + Difficulty.getString().toUpperCase() + " (0:00)";
+			// Leather样式需要重新居中文本
+			timeTxt.screenCenter(X);
 		}
-		// 处理其他样式的下滚动
-		else if (ClientPrefs.data.downScroll)
-		{
-			timeBar.y = FlxG.height - (timeBar.height + 1);
-			timeTxt.y = timeBar.y - (timeTxt.height / 4); // 保持与条的位置关系
-		}
-		// 默认位置（非下滚动）
+		
 		else
 		{
 			timeBar.y = timeTxt.y + (timeTxt.height / 4);
