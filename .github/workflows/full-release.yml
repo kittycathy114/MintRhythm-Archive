@@ -5,7 +5,7 @@ on:
 
 env:
   PROJECT_NAME: MintRhythmExtended
-  REPO_PATH: kittycathy233/PE-M.R.Extended
+  REPO_PATH: kittycathy233/FNF-MintRhythm-Engine
   HAXE_VERSION: 4.3.7
 
 jobs:
