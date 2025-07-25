@@ -204,7 +204,7 @@
     "graphics_menu_title": "Graphics Settings",
 	"graphics_menu_rpc": "Graphics Settings Menu",
 	"low_quality_name": "Low Quality",
-	"low_quality_desc": "If enabled, disables some background details, decreases loading times, and improves performance.",
+	"low_quality_desc": "If enabled, disables some background details, decreases loading times, and improves performance.\nNote: Some mods may not be optimized for this setting.",
 	"antialiasing_name": "Anti-Aliasing",
 	"antialiasing_desc": "If unchecked, disables anti-aliasing, increasing performance at the cost of sharper visuals.",
 	"shaders_name": "Shaders",
@@ -323,6 +323,15 @@
     "firstlaunch_no": "No",
     "bot_addscore_desc_en": "If enabled, when bot hit notes, the score will increase.\n(Doesn't count towards the final score.)",
     "use_system_cursor_desc": "If enabled, the game will use your system's default mouse cursor.",
-    "nps_desc": "Show NPS in the HUD"
+    "nps_desc": "Show NPS in the HUD",
+
+    "mods_import_desc": "(Experimental Feature)\nIf enabled, you can import mods by dragging and dropping mod ZIP files.",
+    "hud_zoomstyle_desc": "Adjust the zoom style of the HUD elements.",
+    "bgvol_desc": "Enable background volume adjustment.\nThis requires 'Auto Pause' to be disabled.",
+    "bgvol_level_desc": "Adjust the volume of the game when it is in the background.\nSame as above, requires 'Auto Pause' to be disabled.",
+    "gameplay_combospr_desc": "Add a 'Combo' pop-up effect when hitting arrows."
+
+
+
 
 }

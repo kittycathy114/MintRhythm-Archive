@@ -127,13 +127,13 @@ class ExtraGameplaySettingSubState extends BaseOptionsMenu
 		addOption(option);
 
 		option = new Option('Background Volume',
-			Language.get("background_volume_desc"),
+			Language.get("bgvol_desc"),
 			'backgroundVolume',
 			BOOL);
 		addOption(option);
 
 		option = new Option('Background Volume Level',
-			Language.get("background_volume_level_desc"),
+			Language.get("bgvol_level_desc"),
 			'backgroundVolumeLevel',
 			PERCENT);
 		option.scrollSpeed = 2;
@@ -317,7 +317,7 @@ class ExtraGameplaySettingSubState extends BaseOptionsMenu
 
 		#if !mobile
 		option = new Option('Mods Import',
-			'If checked, you can drag and drop mod ZIP files to import mods.',
+			Language.get("mods_import_desc"),
 			'enableModsImport',
 			BOOL);
 		addOption(option);
