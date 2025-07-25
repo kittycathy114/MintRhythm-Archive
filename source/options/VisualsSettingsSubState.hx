@@ -142,7 +142,7 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 			Language.get("pausemusic_desc"),
 			'pauseMusic',
 			STRING,
-			['None', 'Tea Time', 'Breakfast', 'Breakfast (Pico)']);
+			['None', 'Tea Time', 'Breakfast', 'Breakfast (Pico)', "Romantic Smile"]);
 		addOption(option);
 		option.onChange = onChangePauseMusic;
 		
