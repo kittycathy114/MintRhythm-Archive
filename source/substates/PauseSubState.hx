@@ -92,7 +92,7 @@ class PauseSubState extends MusicBeatSubstate
 		bpmText.updateHitbox();
 		add(bpmText);
 
-		var speedText:FlxText = new FlxText(20, 15 + 96, 0, 'cur.NOTE SPEED: ${PlayState.instance.songSpeed}x${PlayState.SONG.speed != PlayState.instance.songSpeed ? '(${PlayState.SONG.speed}x)' : ''}', 32);
+		var speedText:FlxText = new FlxText(20, 15 + 96, 0, 'NOTE SPEED: ${PlayState.instance.songSpeed}x${PlayState.SONG.speed != PlayState.instance.songSpeed ? ' (${PlayState.SONG.speed}x)' : ''}', 32);
 		speedText.scrollFactor.set();
 		speedText.setFormat(Paths.font('vcr.ttf'), 32);
 		speedText.updateHitbox();
