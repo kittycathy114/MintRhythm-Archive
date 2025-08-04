@@ -606,7 +606,7 @@ class PlayState extends MusicBeatState
 		Conductor.songPosition = -Conductor.crochet * 5 + Conductor.offset;
 		var showTime:Bool = (ClientPrefs.data.timeBarType != 'Disabled');
 
-		timeTxt = new FlxText(STRUM_X + (FlxG.width / 2) - 248, 19, 400, "", 32);
+		timeTxt = new FlxText(STRUM_X + (FlxG.width / 2) - 248, 19, 640, "", 32);
 		timeTxt.setFormat(Paths.font("vcr.ttf"), ClientPrefs.data.timebarStyle == "Leather" ? 16 : 32, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE,
 			FlxColor.BLACK);
 		timeTxt.scrollFactor.set();
@@ -766,7 +766,7 @@ class PlayState extends MusicBeatState
 		watermarkText.y = !ClientPrefs.data.downScroll ? 20 : FlxG.height - 20;
 		watermarkText.alpha = 0.8;
 		watermarkText.visible = !ClientPrefs.data.hideHud;
-		uiGroup.add(watermarkText);
+		if (ClientPrefs.data.waterMarkPlay)	uiGroup.add(watermarkText);
 
 		ratingCounter = new FlxText(6, 0, 0, "", 20);
 		ratingCounter.setFormat(Paths.font("vcr.ttf"), 16, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
@@ -2066,6 +2066,10 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 				openCharacterEditor();
 			else if (controls.justPressed('debug_3'))
 				eventDebugGroup.visible = !eventDebugGroup.visible;
+			else if (controls.justPressed('debug_4'))
+				cpuControlled = !cpuControlled;
+				botplayTxt.visible = cpuControlled;
+
 		}
 
 		if (healthBar.bounds.max != null && health > healthBar.bounds.max)
@@ -2327,7 +2331,7 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 			var speedMultiplier:Float = switch (ClientPrefs.data.iconbopstyle)
 			{
 				case "Codename": 20;
-				case "Leather": 7;
+				case "Leather": 6;
 				case "SB": 20;
 				case "VSlice(New)": 14;
 				case "VSlice(Old)": 36;
@@ -2339,7 +2343,7 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 			// 定义缩放上限
 			final ICON_BOUND:Float = 1.2; // 1 + 0.2
 
-			if (["VSlice(New)", "VSlice(Old)", "Dave", "Codename"].contains(ClientPrefs.data.iconbopstyle))
+			if (["VSlice(New)", "VSlice(Old)", "Dave", "Codename", "Leather"].contains(ClientPrefs.data.iconbopstyle))
 			{
 				var rate:Float = elapsed * speedMultiplier * playbackRate;
 				iconP1.scale.x = FlxMath.lerp(iconP1.scale.x, 1, rate);
@@ -2353,31 +2357,6 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 				iconP2.scale.x = FlxMath.bound(iconP2.scale.x, Math.NEGATIVE_INFINITY, ICON_BOUND);
 				iconP2.scale.y = FlxMath.bound(iconP2.scale.y, Math.NEGATIVE_INFINITY, ICON_BOUND);
 
-				iconP1.updateHitbox();
-				iconP2.updateHitbox();
-			}
-			else if (ClientPrefs.data.iconbopstyle == "Leather")
-			{
-				// 专用Leather引擎效果
-				var rate:Float = elapsed * speedMultiplier * playbackRate;
-
-				// 应用线性插值
-				iconP1.scale.set(FlxMath.lerp(iconP1.scale.x, 1, rate), FlxMath.lerp(iconP1.scale.y, 1, rate));
-				iconP2.scale.set(FlxMath.lerp(iconP2.scale.x, 1, rate), FlxMath.lerp(iconP2.scale.y, 1, rate));
-
-				// 更新碰撞箱
-				iconP1.updateHitbox();
-				iconP2.updateHitbox();
-
-				// 应用边界限制
-				iconP1.scale.set(FlxMath.bound(iconP1.scale.x, Math.NEGATIVE_INFINITY, ICON_BOUND),
-					FlxMath.bound(iconP1.scale.y, Math.NEGATIVE_INFINITY, ICON_BOUND));
-				iconP2.scale.set(FlxMath.bound(iconP2.scale.x, Math.NEGATIVE_INFINITY, ICON_BOUND),
-					FlxMath.bound(iconP2.scale.y, Math.NEGATIVE_INFINITY, ICON_BOUND));
-
-				// 再次更新碰撞箱
-				iconP1.updateHitbox();
-				iconP2.updateHitbox();
 			}
 			else
 			{
@@ -2392,8 +2371,6 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 				iconP2.scale.x = FlxMath.bound(iconP2.scale.x, Math.NEGATIVE_INFINITY, ICON_BOUND);
 				iconP2.scale.y = FlxMath.bound(iconP2.scale.y, Math.NEGATIVE_INFINITY, ICON_BOUND);
 
-				iconP1.updateHitbox();
-				iconP2.updateHitbox();
 			}
     }
     
@@ -3247,7 +3224,7 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 		}
 
 		if(cpuControlled) cpuHits++;
-		updateRatingCounters();
+		if (ClientPrefs.data.ratCounter)	updateRatingCounters();
 
 		var uiFolder:String = "";
 		var antialias:Bool = ClientPrefs.data.antialiasing;
@@ -3457,7 +3434,7 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 
 	function updateRatingCounters() {
 	// 获取各评分数量
-	var perfects = ratingsData[4].hits;
+	var perfects = !ClientPrefs.data.rmPerfect ? ratingsData[4].hits : 0;
 	var sicks = ratingsData[0].hits;
 	var goods = ratingsData[1].hits;
 	var bads = ratingsData[2].hits;

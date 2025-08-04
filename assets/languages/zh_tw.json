@@ -225,8 +225,10 @@
     "hud_zoomstyle_desc": "調整HUD元素的縮放樣式",
     "bgvol_desc": "啟用背景音量調整功能\n前提是禁用了「Auto Pause」選項",
     "bgvol_leveldesc": "調整遊戲在背景時的音量\n同上，前提是禁用了「Auto Pause」",
-    "gameplay_combospr_desc": "命中箭頭時添加「Combo」彈出效果"
+    "gameplay_combospr_desc": "命中箭頭時添加「Combo」彈出效果",
 
+    "ratcounter_desc": "啟用評分計數器以顯示每種評分類型的命中次數",
+    "watermark_desc": "在遊戲畫面上顯示水印"
 
 
 

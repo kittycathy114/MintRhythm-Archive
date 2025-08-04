@@ -143,6 +143,8 @@ import states.TitleState;
 	public var backgroundVolume:Bool = true; // 是否启用后台降音
 	public var backgroundVolumeLevel:Float = 0.2; // 后台音量级别
 
+	public var ratCounter:Bool = true; // 评分计数器
+	public var waterMarkPlay:Bool = true; // 水印
 }
 
 class ClientPrefs {
@@ -174,6 +176,7 @@ class ClientPrefs {
 		'debug_1'		=> [SEVEN],
 		'debug_2'		=> [EIGHT],
 		'debug_3'		=> [NINE],
+		'debug_4'		=> [SIX],
 		
 		'fullscreen'	=> [F11]
 	];

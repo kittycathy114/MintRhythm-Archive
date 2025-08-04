@@ -329,9 +329,9 @@
     "hud_zoomstyle_desc": "Adjust the zoom style of the HUD elements.",
     "bgvol_desc": "Enable background volume adjustment.\nThis requires 'Auto Pause' to be disabled.",
     "bgvol_level_desc": "Adjust the volume of the game when it is in the background.\nSame as above, requires 'Auto Pause' to be disabled.",
-    "gameplay_combospr_desc": "Add a 'Combo' pop-up effect when hitting arrows."
+    "gameplay_combospr_desc": "Add a 'Combo' pop-up effect when hitting arrows.",
 
-
-
+    "ratcounter_desc": "Enable the rating counter to display the number of hits for each rating type.",
+    "watermark_desc": "Show a watermark on the gameplay screen."
 
 }

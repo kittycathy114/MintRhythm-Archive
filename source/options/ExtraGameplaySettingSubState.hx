@@ -143,6 +143,17 @@ class ExtraGameplaySettingSubState extends BaseOptionsMenu
 		option.decimals = 2;
 		addOption(option);
 
+		option = new Option('Rating Counter',
+			Language.get("ratcounter_desc"),
+			'ratCounter',
+			BOOL);
+		addOption(option);
+
+		option = new Option('Show Watermark',
+			Language.get("watermark_desc"),
+			'waterMarkPlay',
+			BOOL);
+		addOption(option);
 
 		// PERCENT 类型设置
 		option = new Option('Ratings Opacity',
