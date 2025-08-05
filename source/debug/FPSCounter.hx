@@ -544,7 +544,7 @@ class FPSCounter extends Sprite
 	
 	@:functionCode('
 		char* p = line;
-		while (*p < '0' || *p > '9') p++;
+		while (*p < \'0\' || *p > \'9\') p++;
 		return strtoul(p, NULL, 10);
 	')
 	private function parseLine(line:cpp.ConstCharStar):cpp.UInt64
