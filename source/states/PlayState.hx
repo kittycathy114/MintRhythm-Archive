@@ -120,6 +120,13 @@ class PlayState extends MusicBeatState
 	//可以被lua调用的杂项
     public var targetZoom:Float = ClientPrefs.data.hudSize;
 
+	//MRE特有的小图标角度变化
+	var iconP1TargetAngle:Float = 0;
+	var iconP2TargetAngle:Float = 0;
+	var iconP1AngleLerpSpeed:Float = 0.11;
+	var iconP2AngleLerpSpeed:Float = 0.11;
+
+
 
 	// 丝滑血条
 	var displayedHealth:Float = 1; // 用于显示的血量
@@ -2041,6 +2048,11 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 		callOnScripts('onUpdate', [elapsed]);
 
 		super.update(elapsed);
+
+		if (ClientPrefs.data.iconbopstyle == "MintRhythm") {
+        iconP1.angle = FlxMath.lerp(iconP1.angle, iconP1TargetAngle, elapsed / iconP1AngleLerpSpeed);
+        iconP2.angle = FlxMath.lerp(iconP2.angle, iconP2TargetAngle, elapsed / iconP2AngleLerpSpeed);
+   	 	}
 
 		setOnScripts('curDecStep', curDecStep);
 		setOnScripts('curDecBeat', curDecBeat);
@@ -4045,7 +4057,7 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
                 	iconP1.scale.set(1.4, 1.4);
                 	iconP2.scale.set(1.4, 1.4);
 
-            	case /*"Leather" | */"VSlice(New)" | "Codename" | "VSlice(Old)" | "NovaFlare":
+            	case /*"Leather" | */"VSlice(New)" | "Codename" | "VSlice(Old)" | "NovaFlare" | "MintRhythm":
                 	iconP1.scale.set(1.3, 1.3);
                 	iconP2.scale.set(1.3, 1.3);
                 
@@ -4078,26 +4090,25 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
 				iconP1.angle = 15; iconP2.angle = -15;
 			}
 		}
-		else if (ClientPrefs.data.iconbopstyle == "MintRhythm") {
-    		var healthPercent:Float = healthBar.percent;
-    		if (healthPercent < 20) 
-    		{
-        		if (curBeat % 2 == 0) 
-        		{
-            		iconP2.angle = icondancingLeft ? -17 : 17;
-            		FlxTween.tween(iconP2, {angle: 0}, 0.3, {ease: FlxEase.circOut});
-            		icondancingLeft = !icondancingLeft;
-        		}
-    		}
-    		else if (healthPercent > 80) 
-    		{
-        		if (curBeat % 2 == 0) 
-        		{
-            		iconP1.angle = icondancingLeft ? -17 : 17;
-            		FlxTween.tween(iconP1, {angle: 0}, 0.3, {ease: FlxEase.circOut});
-            		icondancingLeft = !icondancingLeft;
-        		}
-        	}
+		else if (ClientPrefs.data.iconbopstyle == "MintRhythm")
+		{
+			var healthPercent:Float = healthBar.percent;
+			if (healthPercent < 20)
+			{
+				if (curBeat % 2 == 0)
+				{
+					iconP2.angle += icondancingLeft ? -17 : 17;
+					icondancingLeft = !icondancingLeft;
+				}
+			}
+			else if (healthPercent > 80)
+			{
+				if (curBeat % 2 == 0)
+				{
+					iconP1.angle += icondancingLeft ? -17 : 17;
+					icondancingLeft = !icondancingLeft;
+				}
+			}
 		}
 		
 
@@ -4143,28 +4154,23 @@ function showEventDebug(eventName:String, values:Array<String>, strumTime:Float)
             camHUD.zoom += 0.03 * camZoomingMult;
         }
 
-        // 在这里添加MintRhythm的icon 4拍旋转逻辑
-        if(ClientPrefs.data.iconbopstyle == "MintRhythm")
-        {
-            var healthPercent:Float = healthBar.percent;
-            if(healthPercent < 20)
-            {
-                iconP1.angle = 30;
-                FlxTween.tween(iconP1, {angle: 0}, 0.3, {ease: FlxEase.circOut});
-            }
-            else if(healthPercent > 80)
-            {
-                iconP2.angle = -30;  
-                FlxTween.tween(iconP2, {angle: 0}, 0.3, {ease: FlxEase.circOut});
-            }
-            else
-            {
-                iconP1.angle = -25;
-                iconP2.angle = 25;
-                FlxTween.tween(iconP1, {angle: 0}, 0.3, {ease: FlxEase.circOut});
-                FlxTween.tween(iconP2, {angle: 0}, 0.3, {ease: FlxEase.circOut}); 
-            }
-        }
+        if (ClientPrefs.data.iconbopstyle == "MintRhythm")
+			{
+				var healthPercent:Float = healthBar.percent;
+				if (healthPercent < 20)
+				{
+					iconP1.angle += 30;
+				}
+				else if (healthPercent > 80)
+				{
+					iconP2.angle -= 30;
+				}
+				else
+				{
+					iconP1.angle -= 25;
+					iconP2.angle += 25;
+				}
+			}
 
         if (SONG.notes[curSection].changeBPM)
         {
