@@ -10,10 +10,6 @@ import llua.*;
 import llua.Lua;
 #end
 
-#if ACHIEVEMENTS_ALLOWED
-import backend.Achievements;
-#end
-
 // Mobile Controls
 import mobile.objects.MobileControls;
 import mobile.objects.IMobileControls;

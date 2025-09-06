@@ -14,7 +14,6 @@ import sys.FileSystem;
 import states.ModsImport;
 
 enum MainMenuColumn {
-	LEFT;
 	CENTER;
 	RIGHT;
 }
@@ -28,7 +27,6 @@ class MainMenuState extends MusicBeatState
 	var allowMouse:Bool = true; //Turn this off to block mouse movement in menus
 
 	var menuItems:FlxTypedGroup<FlxSprite>;
-	var leftItem:FlxSprite;
 	var rightItem:FlxSprite;
 
 	//Centered/Text options
@@ -39,7 +37,6 @@ class MainMenuState extends MusicBeatState
 		'credits'
 	];
 
-	var leftOption:String = #if ACHIEVEMENTS_ALLOWED 'achievements' #else null #end;
 	var rightOption:String = 'options';
 
 	var magenta:FlxSprite;
@@ -96,8 +93,6 @@ class MainMenuState extends MusicBeatState
 			item.screenCenter(X);
 		}
 
-		if (leftOption != null)
-			leftItem = createMenuItem(leftOption, 60, 490);
 		if (rightOption != null)
 		{
 			rightItem = createMenuItem(rightOption, FlxG.width - 60, 490);
@@ -147,17 +142,6 @@ class MainMenuState extends MusicBeatState
 		}
 
 		changeItem();
-
-		#if ACHIEVEMENTS_ALLOWED
-		// Unlocks "Freaky on a Friday Night" achievement if it's a Friday and between 18:00 PM and 23:59 PM
-		var leDate = Date.now();
-		if (leDate.getDay() == 5 && leDate.getHours() >= 18)
-			Achievements.unlock('friday_night_play');
-
-		#if MODS_ALLOWED
-		Achievements.reloadList();
-		#end
-		#end
 
 		#if CHECK_FOR_UPDATES
 		if (showOutdatedWarning && ClientPrefs.data.checkForUpdates && substates.OutdatedSubState.updateVersion != mrExtendVersion) {
@@ -229,22 +213,10 @@ class MainMenuState extends MusicBeatState
 				{
 					case CENTER:
 						selectedItem = menuItems.members[curSelected];
-					case LEFT:
-						selectedItem = leftItem;
 					case RIGHT:
 						selectedItem = rightItem;
 				}
-
-				if(leftItem != null && FlxG.mouse.overlaps(leftItem))
-				{
-					allowMouse = true;
-					if(selectedItem != leftItem)
-					{
-						curColumn = LEFT;
-						changeItem();
-					}
-				}
-				else if(rightItem != null && FlxG.mouse.overlaps(rightItem))
+				if(rightItem != null && FlxG.mouse.overlaps(rightItem))
 				{
 					allowMouse = true;
 					if(selectedItem != rightItem)
@@ -289,21 +261,9 @@ class MainMenuState extends MusicBeatState
 			switch(curColumn)
 			{
 				case CENTER:
-					if(controls.UI_LEFT_P && leftOption != null)
-					{
-						curColumn = LEFT;
-						changeItem();
-					}
-					else if(controls.UI_RIGHT_P && rightOption != null)
+					if(controls.UI_RIGHT_P && rightOption != null)
 					{
 						curColumn = RIGHT;
-						changeItem();
-					}
-
-				case LEFT:
-					if(controls.UI_RIGHT_P)
-					{
-						curColumn = CENTER;
 						changeItem();
 					}
 
@@ -339,11 +299,6 @@ class MainMenuState extends MusicBeatState
 					case CENTER:
 						option = optionShit[curSelected];
 						item = menuItems.members[curSelected];
-
-					case LEFT:
-						option = leftOption;
-						item = leftItem;
-
 					case RIGHT:
 						option = rightOption;
 						item = rightItem;
@@ -361,11 +316,6 @@ class MainMenuState extends MusicBeatState
 						#if MODS_ALLOWED
 						case 'mods':
 							MusicBeatState.switchState(new ModsMenuState());
-						#end
-
-						#if ACHIEVEMENTS_ALLOWED
-						case 'achievements':
-							MusicBeatState.switchState(new AchievementsMenuState());
 						#end
 
 						case 'credits':
@@ -426,8 +376,6 @@ class MainMenuState extends MusicBeatState
 		{
 			case CENTER:
 				selectedItem = menuItems.members[curSelected];
-			case LEFT:
-				selectedItem = leftItem;
 			case RIGHT:
 				selectedItem = rightItem;
 		}
